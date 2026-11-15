@@ -105,7 +105,9 @@ export async function googleUserForCode(settings: GoogleSettings, code: string, 
   let response: Response;
   try {
     response = await fetcher('https://oauth2.googleapis.com/token', {
-      method: 'POST', redirect: 'error', signal: AbortSignal.timeout(10000),
+      // Workers supports manual/follow, but throws for redirect: 'error'.
+      // Do not follow token endpoint redirects with credentials in the body.
+      method: 'POST', redirect: 'manual', signal: AbortSignal.timeout(10000),
       headers: { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({ client_id: settings.clientId, client_secret: settings.clientSecret, code, code_verifier: verifier, redirect_uri: settings.callbackUrl, grant_type: 'authorization_code' }),
     });
