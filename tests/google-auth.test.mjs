@@ -42,7 +42,7 @@ test('Google authentication needs a canonical HTTPS origin, owner email and a se
   assert.equal(googleSettings({ ...environment, GOOGLE_ALLOWED_EMAIL: '' }), null);
 });
 
-test('OAuth requests use PKCE and request identity only basic identity scopes', async t => {
+test('OAuth requests use PKCE, a nonce and only basic identity scopes', async t => {
   const db = database(); t.after(() => db.sqlite.close());
   const login = await beginGoogleLogin(db, settings, '/?subject=Economy', 1000);
   const url = new URL(login.url);

@@ -1,4 +1,4 @@
-import { createRemoteJWKSet, jwtVerify, type JWTVerifyGetKey } from 'jose';
+import type { JWTVerifyGetKey } from 'jose';
 
 export type AppUser = { userId: string; username: string; email: string; displayName: string; fullName: string | null };
 export type GoogleEnvironment = { APP_ORIGIN?: string; GOOGLE_CLIENT_ID?: string; GOOGLE_CLIENT_SECRET?: string; GOOGLE_ALLOWED_EMAIL?: string };
@@ -93,9 +93,9 @@ export class GoogleLoginError extends Error {
   constructor(reason: 'denied' | 'unavailable') { super('Google sign-in could not be completed.'); this.reason = reason; }
 }
 
-const googleKeys = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'), { timeoutDuration: 10000 });
+let googleKeys: JWTVerifyGetKey | undefined;
 
-export async function googleUserForCode(settings: GoogleSettings, code: string, verifier: string, nonce: string, fetcher: typeof fetch = fetch, keys: JWTVerifyGetKey = googleKeys): Promise<AppUser> {
+export async function googleUserForCode(settings: GoogleSettings, code: string, verifier: string, nonce: string, fetcher: typeof fetch = fetch, keys?: JWTVerifyGetKey): Promise<AppUser> {
   if (!code || code.length > 4096 || !tokenPattern.test(verifier) || !tokenPattern.test(nonce)) throw new GoogleLoginError('denied');
   const response = await fetcher('https://oauth2.googleapis.com/token', {
     method: 'POST', redirect: 'error', signal: AbortSignal.timeout(10000),
@@ -106,7 +106,9 @@ export async function googleUserForCode(settings: GoogleSettings, code: string, 
   const result = await response.json() as { id_token?: unknown; error?: unknown };
   if (result.error || typeof result.id_token !== 'string' || !result.id_token || result.id_token.length > 16384) throw new GoogleLoginError('denied');
   try {
-    const { payload } = await jwtVerify(result.id_token, keys, {
+    const { createRemoteJWKSet, jwtVerify } = await import('jose');
+    googleKeys ??= createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'), { timeoutDuration: 10000 });
+    const { payload } = await jwtVerify(result.id_token, keys ?? googleKeys, {
       issuer: ['https://accounts.google.com', 'accounts.google.com'], audience: settings.clientId,
       algorithms: ['RS256'], requiredClaims: ['sub', 'email', 'email_verified', 'nonce', 'iat', 'exp'],
       maxTokenAge: '10m', clockTolerance: 5,
