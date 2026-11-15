@@ -10,7 +10,7 @@
   "workers_dev": true,
   "vars": {
     "APP_ORIGIN": "https://upsc-current-affairs.ajayjarwal.workers.dev",
-    "GOOGLE_CLIENT_ID": "",
+    "GOOGLE_CLIENT_ID": "654377855741-255jm01t26a8vmpvtqpmuvddo4q2hvf2.apps.googleusercontent.com",
     "GOOGLE_ALLOWED_EMAIL": "ajayjarwal75@gmail.com"
   },
   "d1_databases": [
