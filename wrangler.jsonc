@@ -1,0 +1,24 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "upsc-current-affairs",
+  "account_id": "6a3ddc5673b0ff99ae0121bcb11ffcb8",
+  "main": "./worker/index.ts",
+  "compatibility_date": "2026-05-15",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "workers_dev": true,
+  "vars": {
+    "APP_ORIGIN": "",
+    "GITHUB_CLIENT_ID": "",
+    "GITHUB_ALLOWED_USER_ID": "80477282"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "upsc-current-affairs-db",
+      "database_id": "e1f27304-46bb-47ad-8344-e6b818247f64",
+      "migrations_dir": "drizzle"
+    }
+  ]
+}

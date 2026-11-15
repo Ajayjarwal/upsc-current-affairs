@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1794720694393,
+      "tag": "0000_current_affairs",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1794763792637,
+      "tag": "0001_github_auth",
+      "breakpoints": true
+    }
+  ]
+}
