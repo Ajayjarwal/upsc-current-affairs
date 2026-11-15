@@ -9,7 +9,8 @@ Private source: https://github.com/Ajayjarwal/upsc-current-affairs
 
 ## 1. Create a Google OAuth web client
 
-Open https://console.cloud.google.com/auth/overview and select or create a project
+The dedicated project `current-affairs-upsc-desk` has been created. Open
+https://console.cloud.google.com/auth/overview?project=current-affairs-upsc-desk
 for this site. Configure Google Auth Platform branding, then choose External for
 a personal Google account. Use `Current Affairs — UPSC Desk` as the app name and
 your own email as the support/developer contact. Do not activate billing or a trial.
