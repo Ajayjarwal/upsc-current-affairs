@@ -25,8 +25,9 @@ Until the GitHub client ID and secret are supplied, production sign-in stays
 disabled and every notes API request is rejected. The development identity
 cannot access the hosted website.
 
-Copy the workers.dev URL printed by deployment. This is the site's origin.
-The callback URL will be that origin followed by `/auth/github/callback`.
+Current live origin: `https://upsc-current-affairs.ajayjarwal.workers.dev`.
+GitHub callback: `https://upsc-current-affairs.ajayjarwal.workers.dev/auth/github/callback`.
+Source repository: https://github.com/Ajayjarwal/upsc-current-affairs (private).
 
 ## 2. Register a GitHub OAuth app
 
@@ -35,9 +36,9 @@ Open https://github.com/settings/applications/new in the owner account.
 | Field | Value |
 | --- | --- |
 | Application name | `Current Affairs — UPSC Desk` |
-| Homepage URL | The deployed HTTPS workers.dev origin |
+| Homepage URL | `https://upsc-current-affairs.ajayjarwal.workers.dev` |
 | Description | `Private UPSC current affairs notebook` |
-| Authorization callback URL | `https://YOUR_SITE/auth/github/callback` |
+| Authorization callback URL | `https://upsc-current-affairs.ajayjarwal.workers.dev/auth/github/callback` |
 
 Use the exact callback URL without wildcard matching. Device Flow is not needed.
 Expiring provider access tokens can remain enabled: this app uses the provider
@@ -56,7 +57,7 @@ creating a session.
 Copy the OAuth app's public client ID and run:
 
 ```bash
-npm run cloudflare:configure -- --origin https://YOUR_SITE --client-id YOUR_CLIENT_ID --user-id 80477282
+npm run cloudflare:configure -- --origin https://upsc-current-affairs.ajayjarwal.workers.dev --client-id YOUR_CLIENT_ID --user-id 80477282
 npm run cloudflare:check
 ```
 
@@ -83,7 +84,7 @@ presence; the deployed login page stays unavailable if the secret is missing.
 
 ## 4. Connect GitHub for automatic deployments
 
-Push this project to its own private GitHub repository, including
+The source is published to `Ajayjarwal/upsc-current-affairs` (private), including
 `package-lock.json`. The existing `.gitignore` excludes local environment files,
 credentials, database state, dependencies and generated builds.
 
@@ -143,3 +144,23 @@ does not contact the production database or require GitHub credentials.
 - https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app
 - https://developers.cloudflare.com/workers/ci-cd/builds/
 - https://developers.cloudflare.com/d1/reference/migrations/
+
+## Connecting the original local folder to Git
+
+The assistant environment could not create `.git` in the original folder, so
+the initial source was published through a separate checkout. Before running Git
+commands from the original folder, initialize its own repository from a normal
+terminal (only if that folder does not already contain `.git`):
+
+```bash
+cd "/Users/jaynezx/Desktop/CSE/websites/upsc-current-affairs"
+git init -b main
+git remote add origin https://github.com/Ajayjarwal/upsc-current-affairs.git
+git fetch origin main
+git reset --mixed origin/main
+git branch --set-upstream-to=origin/main main
+git status
+```
+
+The mixed reset sets the initial Git index and history; it does not replace the
+working files. Review `git status` before committing your next update.

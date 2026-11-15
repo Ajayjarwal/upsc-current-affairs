@@ -9,7 +9,7 @@
   ],
   "workers_dev": true,
   "vars": {
-    "APP_ORIGIN": "",
+    "APP_ORIGIN": "https://upsc-current-affairs.ajayjarwal.workers.dev",
     "GITHUB_CLIENT_ID": "",
     "GITHUB_ALLOWED_USER_ID": "80477282"
   },
@@ -20,5 +20,6 @@
       "database_id": "e1f27304-46bb-47ad-8344-e6b818247f64",
       "migrations_dir": "drizzle"
     }
-  ]
+  ],
+  "preview_urls": false
 }
