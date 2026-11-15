@@ -18,6 +18,7 @@ export default async function LoginPage({ searchParams }: {
     cancelled: 'Sign-in was cancelled. You can try again when you’re ready.',
     expired: 'This sign-in request expired. Please try again.',
     unavailable: 'Google sign-in is temporarily unavailable. Please try again.',
+    configuration: 'Google sign-in needs a configuration update. Please ask the desk owner to check the Google client credentials.',
   };
   return <LoginScreen
     signInHref={signInPath(returnTo)}

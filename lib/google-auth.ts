@@ -89,22 +89,45 @@ export async function consumeOauthState(db: D1Database, headers: Pick<Headers, '
 }
 
 export class GoogleLoginError extends Error {
-  reason: 'denied' | 'unavailable';
-  constructor(reason: 'denied' | 'unavailable') { super('Google sign-in could not be completed.'); this.reason = reason; }
+  reason: 'denied' | 'unavailable' | 'configuration' | 'expired';
+  diagnostic: 'invalid_identity' | 'token_credentials' | 'token_grant' | 'token_network' | 'token_response' | 'identity_keys';
+  constructor(reason: GoogleLoginError['reason'], diagnostic: GoogleLoginError['diagnostic'] = 'invalid_identity') {
+    super('Google sign-in could not be completed.');
+    this.reason = reason;
+    this.diagnostic = diagnostic;
+  }
 }
 
 let googleKeys: JWTVerifyGetKey | undefined;
 
 export async function googleUserForCode(settings: GoogleSettings, code: string, verifier: string, nonce: string, fetcher: typeof fetch = fetch, keys?: JWTVerifyGetKey): Promise<AppUser> {
   if (!code || code.length > 4096 || !tokenPattern.test(verifier) || !tokenPattern.test(nonce)) throw new GoogleLoginError('denied');
-  const response = await fetcher('https://oauth2.googleapis.com/token', {
-    method: 'POST', redirect: 'error', signal: AbortSignal.timeout(10000),
-    headers: { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ client_id: settings.clientId, client_secret: settings.clientSecret, code, code_verifier: verifier, redirect_uri: settings.callbackUrl, grant_type: 'authorization_code' }),
-  });
-  if (!response.ok) throw new GoogleLoginError('unavailable');
-  const result = await response.json() as { id_token?: unknown; error?: unknown };
-  if (result.error || typeof result.id_token !== 'string' || !result.id_token || result.id_token.length > 16384) throw new GoogleLoginError('denied');
+  let response: Response;
+  try {
+    response = await fetcher('https://oauth2.googleapis.com/token', {
+      method: 'POST', redirect: 'error', signal: AbortSignal.timeout(10000),
+      headers: { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ client_id: settings.clientId, client_secret: settings.clientSecret, code, code_verifier: verifier, redirect_uri: settings.callbackUrl, grant_type: 'authorization_code' }),
+    });
+  } catch {
+    // Never retain upstream exception messages: they may contain request details.
+    throw new GoogleLoginError('unavailable', 'token_network');
+  }
+  let result: { id_token?: unknown; error?: unknown };
+  try {
+    result = await response.json();
+    if (!result || typeof result !== 'object') throw new Error();
+  } catch {
+    throw new GoogleLoginError('unavailable', 'token_response');
+  }
+  // Classify only documented error codes. Do not log provider response bodies.
+  if (typeof result.error === 'string' && ['invalid_client', 'unauthorized_client', 'invalid_scope', 'redirect_uri_mismatch'].includes(result.error)) {
+    throw new GoogleLoginError('configuration', 'token_credentials');
+  }
+  if (result.error === 'invalid_grant') throw new GoogleLoginError('expired', 'token_grant');
+  if (!response.ok || result.error || typeof result.id_token !== 'string' || !result.id_token || result.id_token.length > 16384) {
+    throw new GoogleLoginError('unavailable', 'token_response');
+  }
   try {
     const { createRemoteJWKSet, jwtVerify } = await import('jose');
     googleKeys ??= createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'), { timeoutDuration: 10000 });
@@ -124,6 +147,10 @@ export async function googleUserForCode(settings: GoogleSettings, code: string, 
     return { userId: `google:${payload.sub}`, username: email, email, displayName: fullName ?? email, fullName };
   } catch (error) {
     if (error instanceof GoogleLoginError) throw error;
+    if (typeof error === 'object' && error !== null && 'code' in error &&
+      typeof error.code === 'string' && ['ERR_JWKS_TIMEOUT', 'ERR_JWKS_FETCH_FAILED'].includes(error.code)) {
+      throw new GoogleLoginError('unavailable', 'identity_keys');
+    }
     throw new GoogleLoginError('denied');
   }
 }

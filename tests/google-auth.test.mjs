@@ -105,7 +105,28 @@ test('wrong account, unverified email, wrong nonce, issuer, audience and expired
   const otherKeys = await generateKeyPair('RS256');
   const forgedToken = await signedIdentity({}, otherKeys.privateKey);
   await assert.rejects(googleUserForCode(settings, 'test-code', randomToken(), nonce, async () => Response.json({ id_token: forgedToken }), keyResolver), error => error.reason === 'denied');
-  await assert.rejects(googleUserForCode(settings, 'test-code', randomToken(), nonce, async () => Response.json({ error: 'invalid_grant' }), keyResolver), error => error.reason === 'denied');
+  await assert.rejects(googleUserForCode(settings, 'test-code', randomToken(), nonce, async () => Response.json({ error: 'invalid_grant' }, { status: 400 }), keyResolver), error => error.reason === 'expired');
+});
+
+test('token errors distinguish configuration, expired grants and provider failures without leaking request details', async () => {
+  const cases = [
+    [() => Response.json({ error: 'invalid_client', error_description: environment.GOOGLE_CLIENT_SECRET }, { status: 401 }), 'configuration', 'token_credentials'],
+    [() => Response.json({ error: 'unauthorized_client' }, { status: 400 }), 'configuration', 'token_credentials'],
+    [() => Response.json({ error: 'invalid_grant' }, { status: 400 }), 'expired', 'token_grant'],
+    [() => new Response('Gateway unavailable', { status: 502 }), 'unavailable', 'token_response'],
+    [() => Response.json(null), 'unavailable', 'token_response'],
+    [() => Response.json({ error: 'unknown-provider-error' }, { status: 500 }), 'unavailable', 'token_response'],
+    [() => { throw new Error(`Network error with ${environment.GOOGLE_CLIENT_SECRET}`); }, 'unavailable', 'token_network'],
+  ];
+  for (const [response, reason, diagnostic] of cases) {
+    await assert.rejects(googleUserForCode(settings, 'private-test-code', randomToken(), nonce, async () => response(), keyResolver), error => {
+      assert.equal(error.reason, reason);
+      assert.equal(error.diagnostic, diagnostic);
+      assert.equal(JSON.stringify(error).includes(environment.GOOGLE_CLIENT_SECRET), false);
+      assert.equal(JSON.stringify(error).includes('private-test-code'), false);
+      return true;
+    });
+  }
 });
 
 test('sessions store hashes, expire and are revoked on logout', async t => {
