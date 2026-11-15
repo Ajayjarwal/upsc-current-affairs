@@ -19,3 +19,12 @@ export const authOauthStates = sqliteTable('auth_oauth_states', {
   returnTo: text('return_to').notNull(),
   expiresAt: integer('expires_at').notNull(),
 }, t => [index('auth_oauth_states_expiry').on(t.expiresAt)]);
+
+// Keep the earlier table in the migration history; only Google state is used now.
+export const authGoogleOauthStates = sqliteTable('auth_google_oauth_states', {
+  stateHash: text('state_hash').primaryKey(),
+  verifier: text('verifier').notNull(),
+  nonce: text('nonce').notNull(),
+  returnTo: text('return_to').notNull(),
+  expiresAt: integer('expires_at').notNull(),
+}, t => [index('auth_google_oauth_states_expiry').on(t.expiresAt)]);

@@ -1,11 +1,11 @@
 import { env } from 'cloudflare:workers';
-import { githubSettings, consumeOauthState, githubUserForCode, createSession, GitHubLoginError, authCookie, OAUTH_COOKIE } from '../../../../lib/github-auth';
+import { googleSettings, consumeOauthState, googleUserForCode, createSession, GoogleLoginError, authCookie, OAUTH_COOKIE } from '../../../../lib/google-auth';
 import { safeLoginReturnPath } from '../../../auth-paths';
 
 export const dynamic = 'force-dynamic';
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const settings = githubSettings(env);
+  const settings = googleSettings(env);
   const headers = new Headers({ 'Cache-Control': 'private, no-store', 'Referrer-Policy': 'no-referrer' });
   headers.append('Set-Cookie', authCookie(OAUTH_COOKIE, '', 0));
   const failure = (reason: string) => {
@@ -19,11 +19,11 @@ export async function GET(request: Request) {
     if (url.searchParams.has('error')) return failure('cancelled');
     const code = url.searchParams.get('code');
     if (!code) return failure('expired');
-    const user = await githubUserForCode(settings, code, state.verifier);
+    const user = await googleUserForCode(settings, code, state.verifier, state.nonce);
     headers.append('Set-Cookie', await createSession(env.DB, user));
     headers.set('Location', safeLoginReturnPath(state.return_to));
     return new Response(null, { status: 302, headers });
   } catch (error) {
-    return failure(error instanceof GitHubLoginError ? error.reason : 'unavailable');
+    return failure(error instanceof GoogleLoginError ? error.reason : 'unavailable');
   }
 }

@@ -14,10 +14,10 @@ export default async function LoginPage({ searchParams }: {
   const returnTo = safeLoginReturnPath(params.return_to);
   const user = await getCurrentUser();
   const errors: Record<string, string> = {
-    denied: 'This GitHub account cannot access this desk. Please use your own account.',
+    denied: 'This Google account cannot access this desk. Please use your own account.',
     cancelled: 'Sign-in was cancelled. You can try again when you’re ready.',
     expired: 'This sign-in request expired. Please try again.',
-    unavailable: 'GitHub sign-in is temporarily unavailable. Please try again.',
+    unavailable: 'Google sign-in is temporarily unavailable. Please try again.',
   };
   return <LoginScreen
     signInHref={signInPath(returnTo)}

@@ -1,6 +1,6 @@
 import { localSignOutPath, safeLoginReturnPath, authNavigationAllowed } from '../../auth-paths';
 import { env } from 'cloudflare:workers';
-import { revokeSession, authCookie, SESSION_COOKIE, OAUTH_COOKIE } from '../../../lib/github-auth';
+import { revokeSession, authCookie, SESSION_COOKIE, OAUTH_COOKIE } from '../../../lib/google-auth';
 
 export const dynamic = 'force-dynamic';
 export async function GET(request: Request) {

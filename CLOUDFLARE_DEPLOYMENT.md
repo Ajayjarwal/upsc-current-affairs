@@ -1,86 +1,78 @@
-# Deploy Current Affairs with GitHub sign-in
+# Deploy Current Affairs with Google sign-in
 
-The application uses Cloudflare Workers for hosting, the existing
-`upsc-current-affairs-db` D1 database, and GitHub OAuth for sign-in. Cloudflare
-Zero Trust is not used and does not need to be activated.
+The site runs on Cloudflare Workers with the existing `upsc-current-affairs-db`
+D1 database. GitHub hosts the source code; website sign-in uses Google only.
+Cloudflare Zero Trust is not required.
 
-`wrangler.jsonc` contains the Worker name, Cloudflare account, real D1 binding,
-site origin, public OAuth client ID and permitted GitHub user ID. The current
-permitted user ID is the connected owner's GitHub account (`80477282`).
+Live site: https://upsc-current-affairs.ajayjarwal.workers.dev
+Private source: https://github.com/Ajayjarwal/upsc-current-affairs
 
-## 1. Build and create the initial Worker
+## 1. Create a Google OAuth web client
 
-Use Node 22.13+ in the Node 22 line (`.nvmrc` selects Node 22).
+Open https://console.cloud.google.com/auth/overview and select or create a project
+for this site. Configure Google Auth Platform branding, then choose External for
+a personal Google account. Use `Current Affairs — UPSC Desk` as the app name and
+your own email as the support/developer contact. Do not activate billing or a trial.
+
+In Audience, keep Testing for initial setup and add `ajayjarwal75@gmail.com` as a
+test user. In Data access, use only `openid`, email and profile. In Clients, create
+an OAuth client with application type **Web application**.
+
+| Field | Value |
+| --- | --- |
+| Name | `Current Affairs Web` |
+| Authorized JavaScript origin | `https://upsc-current-affairs.ajayjarwal.workers.dev` |
+| Authorized redirect URI | `https://upsc-current-affairs.ajayjarwal.workers.dev/auth/google/callback` |
+
+Use the exact redirect URI, without wildcard matching. This is a server-side
+redirect flow, so JavaScript origin is optional; it is provided above for clarity.
+The app uses only basic identity scopes, no Gmail or Google Drive permissions.
+Google may reject sign-in inside embedded browsers; use a normal browser tab for
+Google account sign-in if that happens.
+
+## 2. Configure public values and the private secret
+
+`wrangler.jsonc` already contains the Worker, account and D1 binding. The allowed
+Google email is `ajayjarwal75@gmail.com`. Set the public client ID:
+
+```bash
+npm run cloudflare:configure -- --origin https://upsc-current-affairs.ajayjarwal.workers.dev --client-id YOUR_GOOGLE_CLIENT_ID --email ajayjarwal75@gmail.com
+npm run cloudflare:check
+```
+
+Generate and save the Google client secret yourself. In Cloudflare, open
+Workers & Pages > `upsc-current-affairs` > Settings > Runtime variables and secrets.
+Add `GOOGLE_CLIENT_SECRET`, check **Secret**, paste its value directly, and deploy.
+Do not paste the secret into chat, source, command arguments or `wrangler.jsonc`.
+Alternatively run `npm run cloudflare:secret` and use its hidden interactive prompt.
+
+Remove the obsolete `GITHUB_CLIENT_SECRET` from the Worker. Old GitHub sessions
+cannot sign in: the callback route is removed, new session cookies use distinct
+names, and sessions must have a Google subject and the permitted verified email.
+The previously applied `0001_github_auth.sql` is kept as immutable migration
+history; it does not enable GitHub login. `0002_google_auth.sql` adds Google state
+and nonce storage without changing article records.
+
+## 3. Validate and deploy
+
+Use Node 22.13+ (Node 22 is selected by `.nvmrc`).
 
 ```bash
 npm run install:ci
 npm test
 npx tsc --noEmit
-npm run deploy:bootstrap
-```
-
-The bootstrap command builds, applies pending D1 migrations and deploys the
-Worker. It is for first-time setup, so it allows missing OAuth configuration.
-Until the GitHub client ID and secret are supplied, production sign-in stays
-disabled and every notes API request is rejected. The development identity
-cannot access the hosted website.
-
-Current live origin: `https://upsc-current-affairs.ajayjarwal.workers.dev`.
-GitHub callback: `https://upsc-current-affairs.ajayjarwal.workers.dev/auth/github/callback`.
-Source repository: https://github.com/Ajayjarwal/upsc-current-affairs (private).
-
-## 2. Register a GitHub OAuth app
-
-Open https://github.com/settings/applications/new in the owner account.
-
-| Field | Value |
-| --- | --- |
-| Application name | `Current Affairs — UPSC Desk` |
-| Homepage URL | `https://upsc-current-affairs.ajayjarwal.workers.dev` |
-| Description | `Private UPSC current affairs notebook` |
-| Authorization callback URL | `https://upsc-current-affairs.ajayjarwal.workers.dev/auth/github/callback` |
-
-Use the exact callback URL without wildcard matching. Device Flow is not needed.
-Expiring provider access tokens can remain enabled: this app uses the provider
-token once to fetch identity, then discards it and uses its own D1 session.
-
-Register the app and generate its client secret yourself. Do not paste the secret
-into chat, GitHub source files, an issue, or `wrangler.jsonc`.
-
-The login request uses PKCE and an unguessable, single-use, browser-bound state.
-It asks for identity only, with no repository or private-email scopes. The server
-checks the returned numeric GitHub ID against the configured owner ID before
-creating a session.
-
-## 3. Save the public configuration and private secret
-
-Copy the OAuth app's public client ID and run:
-
-```bash
-npm run cloudflare:configure -- --origin https://upsc-current-affairs.ajayjarwal.workers.dev --client-id YOUR_CLIENT_ID --user-id 80477282
-npm run cloudflare:check
-```
-
-The command writes only public identifiers to `wrangler.jsonc`.
-
-Store the client secret directly in Cloudflare, either through its dashboard
-(Worker > Settings > Variables and Secrets > Add > Secret, name
-`GITHUB_CLIENT_SECRET`) or through this interactive command:
-
-```bash
-npm run cloudflare:secret
-```
-
-Paste the secret into that command's hidden prompt, not into the command line.
-Then deploy:
-
-```bash
 npm run deploy
 ```
 
-Cloudflare retains the secret across future deployments. It is accessed only by
-the server at runtime. Public configuration checks do not verify the secret's
-presence; the deployed login page stays unavailable if the secret is missing.
+`npm run deploy` checks the public config, builds, applies pending migrations and
+deploys. For an initial locked deployment before Google credentials exist, use
+`npm run deploy:bootstrap`. Missing credentials keep Google sign-in disabled and
+reject notes API access. Local development identities never work in production.
+
+Cloudflare retains secrets across source deployments. The production config must
+contain the Google client ID, allowed email and actual site origin; the secret
+exists only in Cloudflare. If Wrangler authentication expires, run
+`npx wrangler login` in your normal terminal and complete Cloudflare sign-in.
 
 ## 4. Connect GitHub for automatic deployments
 
@@ -110,38 +102,28 @@ Do not create a Cloudflare Pages project for this app.
 Use local previews until separate databases and OAuth callback settings have
 been configured for any non-production branches you want to deploy.
 
-## 5. Verify and import your notes
+## 5. Verify and import notes
 
-Open the live website and choose Continue with GitHub. Check that the app requests
-only your identity. Signing in with a different GitHub account should be denied.
-Export all notes from the original local desk, then import that JSON while signed
-in to the hosted desk. This associates the notes with your verified GitHub ID.
+Open the live site in a normal browser and choose Continue with Google. Use
+`ajayjarwal75@gmail.com`. Other accounts and unverified emails are denied.
+Export notes from the original localhost desk, then import that JSON while signed
+in on the hosted desk. Notes are stored under the verified Google `sub` identity;
+existing local notes are preserved and are not automatically uploaded.
 
-The initial articles migration has already been applied. The GitHub auth
-migration creates `auth_sessions` and `auth_oauth_states`; migrations never upload
-your local notes or change their ownership. New migrations are applied with:
+Verify that edits survive refresh, and that sign-out blocks access to notes.
+Sessions expire after seven days and are revoked in D1 on logout. Cookies are
+Secure, HttpOnly, SameSite=Lax and use the `__Host-` prefix. OAuth state is bound to
+the browser, expires after ten minutes and is consumed once. PKCE and nonce are
+checked; ID token signatures, issuer, audience, expiry and verified owner email
+are checked server-side. Google ID/access tokens are not retained.
 
-```bash
-npm run db:migrate
-```
-
-Check that edits survive a refresh, and that signing out prevents access to the
-notes. A session lasts seven days, is stored only as a SHA-256 hash in D1, and is
-revoked server-side on logout. Session and OAuth cookies are Secure, HttpOnly,
-SameSite=Lax and use the __Host- prefix. Expired records are cleaned up on login.
-
-Code changes deploy when pushed to `main`. Notes are runtime D1 data, so adding
-or editing notes does not require a GitHub push.
-
-## Local development
-
-`npm run dev` retains the original local database and development account. It
-does not contact the production database or require GitHub credentials.
+`npm run dev` keeps the localhost development account and local notes. It does
+not contact production D1 or require Google credentials.
 
 ## References
 
-- https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps
-- https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app
+- https://developers.google.com/identity/openid-connect/openid-connect
+- https://developers.google.com/identity/protocols/oauth2/web-server
 - https://developers.cloudflare.com/workers/ci-cd/builds/
 - https://developers.cloudflare.com/d1/reference/migrations/
 

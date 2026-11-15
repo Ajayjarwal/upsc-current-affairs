@@ -1,13 +1,13 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { env } from 'cloudflare:workers';
-import { githubSettings, localPreviewUser, sessionUser } from '../lib/github-auth';
+import { googleSettings, localPreviewUser, sessionUser } from '../lib/google-auth';
 import { loginPagePath } from './auth-paths';
 
 export async function getCurrentUser() {
   const requestHeaders = await headers();
   if (import.meta.env.DEV) return localPreviewUser(requestHeaders);
-  const settings = githubSettings(env);
+  const settings = googleSettings(env);
   if (!settings || !env.DB) return null;
   return sessionUser(env.DB, requestHeaders, settings);
 }
@@ -19,5 +19,5 @@ export async function requireUser(returnTo = '/') {
 }
 
 export function authenticationReady() {
-  return import.meta.env.DEV || (githubSettings(env) !== null && !!env.DB);
+  return import.meta.env.DEV || (googleSettings(env) !== null && !!env.DB);
 }

@@ -1,4 +1,4 @@
-const reservedAuthPaths = new Set(['/signin-with-chatgpt', '/signout-with-chatgpt', '/callback', '/auth/sign-in', '/auth/sign-out', '/auth/github/callback']);
+const reservedAuthPaths = new Set(['/signin-with-chatgpt', '/signout-with-chatgpt', '/callback', '/auth/sign-in', '/auth/sign-out', '/auth/google/callback']);
 
 export function safeRelativeReturnPath(value: string): string {
   if (!value.startsWith('/') || value.startsWith('//')) return '/';

@@ -10,8 +10,8 @@
   "workers_dev": true,
   "vars": {
     "APP_ORIGIN": "https://upsc-current-affairs.ajayjarwal.workers.dev",
-    "GITHUB_CLIENT_ID": "Ov23lihsUW60tj7H203B",
-    "GITHUB_ALLOWED_USER_ID": "80477282"
+    "GOOGLE_CLIENT_ID": "",
+    "GOOGLE_ALLOWED_EMAIL": "ajayjarwal75@gmail.com"
   },
   "d1_databases": [
     {

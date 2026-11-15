@@ -64,9 +64,9 @@ export default function LoginScreen({ signInHref, deskHref, signOutHref, signedI
           if (pending) { event.preventDefault(); return; }
           setPending(true);
         }}>
-          <span>{pending ? 'Opening your desk…' : signedInIdentity ? 'Open your desk' : localPreview ? 'Continue to your desk' : 'Continue with GitHub'}</span><ArrowRight size={18}/>
-        </a> : <button className="login-signin" disabled>Sign-in unavailable</button>}
-        {!authReady ? <p className="login-provider-note" role="status">Sign-in setup is in progress. Please try again later.</p> : signedInIdentity ? <a href={signOutHref} className="login-switch-account">Sign out</a> : <p className="login-provider-note">{localPreview ? 'This local preview uses a development account.' : 'Sign in with your GitHub account. No repository access required.'}</p>}
+          <span>{pending ? 'Opening your desk…' : signedInIdentity ? 'Open your desk' : localPreview ? 'Continue to your desk' : 'Continue with Google'}</span><ArrowRight size={18}/>
+        </a> : <button className="login-signin" disabled>Continue with Google</button>}
+        {!authReady ? <p className="login-provider-note" role="status">Sign-in setup is in progress. Please try again later.</p> : signedInIdentity ? <a href={signOutHref} className="login-switch-account">Sign out</a> : <p className="login-provider-note">{localPreview ? 'This local preview uses a development account.' : 'Sign in with your Google account. Only your name and email are used to sign in.'}</p>}
         <div className="login-card-divider"/>
         <div className="login-privacy"><LockKeyhole size={16} strokeWidth={1.6}/><p>Your collection is private to your account.<br/>Pick up where you left off, on any device.</p></div>
       </section>

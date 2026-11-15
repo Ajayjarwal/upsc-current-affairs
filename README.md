@@ -16,7 +16,7 @@ For independent hosting from GitHub, follow [CLOUDFLARE_DEPLOYMENT.md](CLOUDFLAR
 - Source name and URL, bookmarks, and Unread / Read / Revised states
 - JSON batch import with validation, article previews and duplicate-ID skipping
 - Full JSON export, downloadable template and a copyable ChatGPT preparation prompt
-- Online D1 storage scoped to the verified GitHub account
+- Online D1 storage scoped to the verified Google account
 - Optimistic edit conflict detection, server-side validation, same-origin write checks, and sanitised article rendering
 - Responsive collection and article views
 - Persistent dark/light theme toggle in the sidebar
@@ -26,13 +26,14 @@ For independent hosting from GitHub, follow [CLOUDFLARE_DEPLOYMENT.md](CLOUDFLAR
 
 The root `wrangler.jsonc` is the configuration for independent Cloudflare hosting.
 It contains the existing Cloudflare account and real `upsc-current-affairs-db` D1
-binding. Set the GitHub client ID, site origin and allowed account ID with
-`npm run cloudflare:configure` before enabling sign-in. Store the GitHub client
+binding. Set the Google client ID, site origin and allowed email with
+`npm run cloudflare:configure` before enabling sign-in. Store the Google client
 secret with `npm run cloudflare:secret`, never in source. `npm run cloudflare:check` reports missing configuration.
 
-Production signs in with GitHub using OAuth state + PKCE. Only the configured
-GitHub account can open the private desk. Sessions are stored as hashes in D1;
-GitHub access tokens are used only to verify identity and are not retained.
+Production signs in with Google using OAuth state, PKCE and an OpenID Connect
+nonce. Signed ID tokens are checked against Google keys, issuer, audience, expiry
+and the permitted verified email. Only that Google account can open the private
+desk. Sessions are stored as hashes in D1; provider tokens are not retained.
 Local `npm run dev` keeps the existing localhost-only development account and
 local notes database; it never connects to production D1.
 
@@ -45,7 +46,7 @@ npm run build
 
 `npm run deploy` checks configuration, builds, applies pending D1 migrations and
 deploys. Workers Builds uses `npm run build` followed by `npm run deploy:built`.
-See the deployment guide for GitHub OAuth and automatic deployment setup.
+See the deployment guide for Google OAuth and GitHub automatic deployment setup.
 
 The `.openai/hosting.json` file preserves the original Site identity; it is not
 the configuration used for independent Cloudflare deployment.

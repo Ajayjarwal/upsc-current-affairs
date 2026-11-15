@@ -3,7 +3,7 @@ import test from 'node:test';
 import { safeRelativeReturnPath, safeLoginReturnPath, loginPagePath, authNavigationAllowed, signInPath, signOutPath } from '../app/auth-paths.ts';
 
 test('login return destinations reject external URLs and authentication endpoints', () => {
-  for (const path of ['https://example.com', '//example.com', '/\\example.com', 'javascript:alert(1)', '/signin-with-chatgpt?return_to=/login', '/signout-with-chatgpt', '/callback', '/auth/sign-in', '/auth/sign-out', '/auth/github/callback', '/auth/github/callback/']) {
+  for (const path of ['https://example.com', '//example.com', '/\\example.com', 'javascript:alert(1)', '/signin-with-chatgpt?return_to=/login', '/signout-with-chatgpt', '/callback', '/auth/sign-in', '/auth/sign-out', '/auth/google/callback', '/auth/google/callback/']) {
     assert.equal(safeRelativeReturnPath(path), '/');
   }
 });
