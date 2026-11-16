@@ -1,6 +1,6 @@
 # Current Affairs — UPSC Desk
 
-A private UPSC news notebook using React, Vinext, Cloudflare Workers and D1.
+A private UPSC current news notebook using React, Vinext, Cloudflare Workers and D1.
 
 For independent hosting from GitHub, follow [CLOUDFLARE_DEPLOYMENT.md](CLOUDFLARE_DEPLOYMENT.md).
 
