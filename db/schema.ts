@@ -2,7 +2,8 @@ import { sqliteTable, text, primaryKey, integer, index } from 'drizzle-orm/sqlit
 export const articles = sqliteTable('articles', {
   id: text('id').notNull(), userId: text('user_id').notNull(), data: text('data').notNull(),
   createdAt: text('created_at').notNull(), updatedAt: text('updated_at').notNull(),
-}, t => [primaryKey({columns:[t.userId,t.id]})]);
+  importBatchId: text('import_batch_id'),
+}, t => [primaryKey({columns:[t.userId,t.id]}), index('articles_import_batch').on(t.userId,t.importBatchId)]);
 
 export const authSessions = sqliteTable('auth_sessions', {
   sessionHash: text('session_hash').primaryKey(),
@@ -33,4 +34,12 @@ export const authGoogleOauthStates = sqliteTable('auth_google_oauth_states', {
 export const examples = sqliteTable('examples', {
   id: text('id').notNull(), userId: text('user_id').notNull(), data: text('data').notNull(),
   createdAt: text('created_at').notNull(), updatedAt: text('updated_at').notNull(),
-}, t => [primaryKey({columns:[t.userId,t.id]})]);
+  importBatchId: text('import_batch_id'),
+}, t => [primaryKey({columns:[t.userId,t.id]}), index('examples_import_batch').on(t.userId,t.importBatchId)]);
+
+export const importBatches = sqliteTable('import_batches', {
+  id: text('id').notNull(), userId: text('user_id').notNull(),
+  collection: text('collection', {enum:['articles','examples']}).notNull(),
+  sourceName: text('source_name').notNull(), createdAt: text('created_at').notNull(),
+  requestedCount: integer('requested_count').notNull(), insertedCount: integer('inserted_count').notNull().default(0),
+}, t => [primaryKey({columns:[t.userId,t.id]}), index('import_batches_user_date').on(t.userId,t.createdAt,t.id)]);

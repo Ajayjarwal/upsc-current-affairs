@@ -2,6 +2,7 @@ import { env } from 'cloudflare:workers';
 import { getCurrentUser } from '../../auth';
 import { articleSchema } from '../../model';
 import { z } from 'zod';
+import { importMetadataSchema, recordImport } from '../../import-history-store';
 export const dynamic = 'force-dynamic';
 const json = (v:unknown,status=200) => Response.json(v,{status,headers:{'Cache-Control':'no-store'}});
 async function context(req:Request,write=false) {
@@ -28,7 +29,8 @@ export async function GET(req:Request) {
   } catch(e) {return failure(e);}
 }
 export async function POST(req:Request) {
-  try { const {db,userId}=await context(req,true); const input=z.object({articles:z.array(articleSchema).min(1).max(100)}).parse(await body(req));
+  try { const {db,userId}=await context(req,true); const input=z.object({articles:z.array(articleSchema).min(1).max(100),import:importMetadataSchema.optional()}).parse(await body(req));
+    if(input.import)return json({inserted:await recordImport(db,userId,'articles',input.articles,input.import.sourceName)});
     const now=new Date().toISOString();
     const r=await db.batch(input.articles.map(a=>db.prepare('INSERT OR IGNORE INTO articles (id,user_id,data,created_at,updated_at) VALUES (?,?,?,?,?)').bind(a.id,userId,JSON.stringify(a),now,now)));
     return json({inserted:r.reduce((n,x)=>n+(x.meta.changes||0),0)});
