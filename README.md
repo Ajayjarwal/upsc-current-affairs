@@ -80,8 +80,10 @@ image URLs or split content across notes. JSON import remains limited to 3 MB.
 
 ## Examples collection
 
-Open **Examples** in the sidebar to store cases, initiatives and stories separately from current affairs. Each example supports multiple subjects, one or more GS papers (I–IV), custom topic tags, rich notes, sources, bookmarks and revision status. Topic filters and exports only use the selected collection.
+Open **Examples** in the sidebar to store cases, initiatives and stories separately from current affairs. Each example appears as a bold heading that expands in place to show the short example and its source. Examples support multiple subjects, one or more GS papers (I–IV), topic tags for filtering, and bookmarks. Tags stay hidden on the cards. Topic filters and exports only use the selected collection.
 
 Examples import and export use `schema: "upsc-examples/1"` with an `examples` array. Each example includes `id`, `title`, `subjects`, `gsPaper`, `tags`, and `contentHtml`; `summary`, sources, status and bookmark are optional. A news date is not required. The import dialog provides a template and a ChatGPT prompt for suggesting relevant topic tags from supplied material. Review facts and tags before saving.
 
 Deployment applies `0003_examples.sql` before publishing. It adds a separate examples table without modifying current affairs records.
+
+**Practise recall** hides the example until you reveal it, then asks whether you remembered it, partly remembered it, or forgot it. Harder examples return sooner. Recall history is stored in the signed-in account’s browser profile and does not sync between devices. Editing the example’s facts or source resets its recall history.

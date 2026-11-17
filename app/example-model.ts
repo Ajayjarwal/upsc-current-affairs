@@ -14,16 +14,16 @@ export const exampleSchema = z.preprocess(value => {
 });
 export const blankExample = (): Article => ({
   id: crypto.randomUUID(), title: '', subjects: ['General'], tags: [], newsDate: today(), gsPaper: [], summary: '',
-  contentHtml: '<h2>Example</h2><p><br></p><h2>Key facts</h2><ul><li><br></li></ul><h2>Use in an answer</h2><p><br></p>',
+  contentHtml: '<p><br></p>',
   sourceName: '', sourceUrl: '', status: 'Unread', bookmarked: false,
 });
 export const exampleImportTemplate = {
   schema: 'upsc-examples/1', examples: [{
     id: 'replace-with-unique-example-id', title: 'Replace with a short example title',
     subjects: ['Society & Social Justice'], gsPaper: ['GS II'], tags: ['Water & sanitation', 'Poverty'],
-    summary: 'A brief, factual account of the supplied example.',
-    contentHtml: '<h2>Example</h2><p>Describe only the example supplied.</p><h2>Key facts</h2><ul><li>Verified fact from the supplied material.</li></ul><h2>Use in an answer</h2><p>Explain what this example illustrates.</p>',
+    summary: '',
+    contentHtml: '<p>Write only the supplied example in 2–3 short lines.</p>',
     sourceName: '', sourceUrl: '', status: 'Unread', bookmarked: false,
   }],
 };
-export const exampleImportPrompt = 'Convert the example I provide into JSON for my UPSC Examples collection. Return only valid JSON with schema "upsc-examples/1" and an examples array. Assign one or more relevant subjects and GS papers (GS I–IV). Suggest a few precise topic tags grounded in the example, such as Water & sanitation, Poverty, Health, Accountability or Local governance; avoid generic or irrelevant tags. Do not invent facts, figures, outcomes, dates or source links. Keep the example and facts crisp. Explain briefly how it could support a mains answer. Use contentHtml for the example, key facts and use in an answer. Preserve any supplied stable ID; otherwise use a unique ID. Allowed subjects: ';
+export const exampleImportPrompt = 'Convert the example I provide into JSON for my UPSC Examples collection. Return only valid JSON with schema "upsc-examples/1" and an examples array. Assign one or more relevant subjects and GS papers (GS I–IV). Suggest a few precise topic tags grounded in the example, such as Water & sanitation, Poverty, Health, Accountability or Local governance; avoid generic or irrelevant tags. Do not invent facts, figures, outcomes, dates or source links. Write the example as one plain paragraph of 2–3 short lines in contentHtml. Do not add headings, key facts sections, summaries, or advice on using it in an answer. Put the source separately in sourceName and sourceUrl; do not repeat it in the paragraph. Keep summary empty. Preserve any supplied stable ID; otherwise use a unique ID. Allowed subjects: ';
