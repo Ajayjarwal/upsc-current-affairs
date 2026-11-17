@@ -41,3 +41,21 @@ test('line breaks and unformatted existing examples remain readable',()=>{
  assert.equal(body.html,'First line &amp; context.<br><u>Second line.</u>');
  assert.equal(exampleFormatting('<p><br></p>').text,'');
 });
+
+test('example images survive JSON save, reopen and edit without entering the short text',()=>{
+ const src='data:image/webp;base64,aGVsbG8=';
+ const entry={...base,contentHtml:'<p><strong>A short fact.</strong></p><figure><img src="'+src+'" alt="Water project"><figcaption>Water project</figcaption></figure><p>Source: WHO, UNICEF, 2024</p>'};
+ const reopened=exampleBody(JSON.parse(JSON.stringify(entry)));
+ assert.equal(reopened.text,'A short fact.');
+ assert.equal(reopened.html,'<strong>A short fact.</strong>');
+ assert.deepEqual(reopened.images,[{src,description:'Water project'}]);
+ assert.equal(reopened.source,base.sourceName);
+ const resaved=exampleBody({...entry,contentHtml:'<p>'+reopened.html+'</p><figure><img src="'+reopened.images[0].src+'" alt="Water project"><figcaption>Water project</figcaption></figure>'});
+ assert.deepEqual(resaved,reopened);
+});
+test('image extraction supports imported URLs and captions and rejects unsafe images',()=>{
+ const body=exampleBody({...base,contentHtml:'<p>Fact.</p><figure><img src="https://example.com/chart.png" onerror="alert(1)"><figcaption>A chart</figcaption></figure><img src="javascript:alert(1)"><img src="data:image/svg+xml;base64,PHN2Zz4=">'});
+ assert.equal(body.text,'Fact.');
+ assert.deepEqual(body.images,[{src:'https://example.com/chart.png',description:'A chart'}]);
+ assert.doesNotMatch(body.html,/img|onerror|chart|script/);
+});

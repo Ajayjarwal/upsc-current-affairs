@@ -1,5 +1,6 @@
 import { safeHtml } from './sanitize';
 import type { Article } from './model';
+export type ExampleImage={src:string;description:string};
 export function exampleFormatting(html:string):{text:string;html:string} {
  if(typeof document==='undefined')return {text:'',html:''};
  const doc=new DOMParser().parseFromString(safeHtml(html),'text/html');
@@ -23,9 +24,12 @@ export function exampleFormatting(html:string):{text:string;html:string} {
  const text=(doc.body.textContent??'').replace(/[\t ]+/g,' ').replace(/ *\n */g,'\n').replace(/\n{3,}/g,'\n\n').trim();
  return {text,html:formatted};
 }
-export function exampleBody(entry:Article):{text:string;html:string;source:string} {
- if(typeof document==='undefined')return {text:'',html:'',source:entry.sourceName};
+export function exampleBody(entry:Article):{text:string;html:string;source:string;images:ExampleImage[]} {
+ if(typeof document==='undefined')return {text:'',html:'',source:entry.sourceName,images:[]};
  const doc=new DOMParser().parseFromString(safeHtml(entry.contentHtml),'text/html');
+ const images=Array.from(doc.querySelectorAll('img')).map(image=>({src:image.getAttribute('src')!,description:image.getAttribute('alt')||image.closest('figure')?.querySelector('figcaption')?.textContent?.trim()||''}));
+ // Images and their captions are separate from the short example text.
+ doc.querySelectorAll('img,figcaption').forEach(node=>node.remove());
  doc.querySelectorAll('h2,h3,h4').forEach(heading=>{
   if(/^(example|key facts|use in an answer|where could i use this\??)$/i.test(heading.textContent?.trim()??''))heading.remove();
  });
@@ -37,7 +41,7 @@ export function exampleBody(entry:Article):{text:string;html:string;source:strin
  });
  const formatted=exampleFormatting(doc.body.innerHTML);
  const body=formatted.text?formatted:exampleFormatting(textMarkup(entry.summary||entry.title));
- return {...body,source};
+ return {...body,source,images};
 }
 export function textMarkup(text:string):string {
  const escaped=text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
