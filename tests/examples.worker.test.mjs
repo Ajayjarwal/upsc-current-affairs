@@ -32,10 +32,11 @@ test('examples keep their own records and tags, enforce ownership, and support e
   try{
     const db=await worker.getD1Database('DB');
     for(const file of ['0000_current_affairs.sql','0003_examples.sql']) await db.prepare(await readFile(new URL('../drizzle/'+file,import.meta.url),'utf8')).run();
-    const example={id:'same-id',title:'Community sanitation initiative',subjects:['Society & Social Justice','Polity & Governance'],gsPaper:['GS II','GS IV'],tags:['Water & sanitation','Poverty'],contentHtml:'<p>A supplied example for a mains answer.</p><figure><img src="data:image/webp;base64,aGVsbG8=" alt="Project image"><figcaption>Project image</figcaption></figure>'};
+    const example={id:'same-id',title:'Community sanitation initiative',recallQuestion:'How did the community improve sanitation?',subjects:['Society & Social Justice','Polity & Governance'],gsPaper:['GS II','GS IV'],tags:['Water & sanitation','Poverty'],contentHtml:'<p>A supplied example for a mains answer.</p><figure><img src="data:image/webp;base64,aGVsbG8=" alt="Project image"><figcaption>Project image</figcaption></figure>'};
     assert.equal((await send('/api/examples','GET',null,null)).status,401);
     assert.equal((await send('/api/examples','POST',{examples:[example]},'owner','https://other.test')).status,403);
     assert.equal((await send('/api/examples','POST',{examples:[{...example,gsPaper:[]}]})).status,400);
+    assert.equal((await send('/api/examples','POST',{examples:[{...example,recallQuestion:'x'.repeat(501)}]})).status,400);
     assert.equal((await send('/api/examples','POST',{examples:[{...example,gsPaper:['Prelims']}]})).status,400);
     assert.equal((await send('/api/examples','POST',{examples:[{...example,subjects:['Not a subject']}]})).status,400);
     assert.deepEqual((await send('/api/examples','POST',{examples:[example]})).data,{inserted:1});
@@ -44,6 +45,7 @@ test('examples keep their own records and tags, enforce ownership, and support e
     assert.deepEqual((await send('/api/articles','POST',{articles:[news]})).data,{inserted:1});
     const saved=(await send('/api/examples')).data.examples[0];
     assert.equal(saved.contentHtml,example.contentHtml);
+    assert.equal(saved.recallQuestion,example.recallQuestion);
     assert.deepEqual(saved.subjects,example.subjects);
     assert.deepEqual(saved.tags,example.tags);
     assert.deepEqual(saved.gsPaper,example.gsPaper);
@@ -52,9 +54,10 @@ test('examples keep their own records and tags, enforce ownership, and support e
     assert.equal((await send('/api/examples','GET',null,'other')).data.examples.length,0);
     assert.equal((await send('/api/examples','PUT',{example:{...saved,title:'Not permitted'},expectedUpdatedAt:saved.updatedAt},'other')).status,409);
     assert.equal((await send('/api/examples','PUT',{example:{...saved,title:'Updated example',tags:['Sanitation']},expectedUpdatedAt:'stale'})).status,409);
-    assert.equal((await send('/api/examples','PUT',{example:{...saved,title:'Updated example',tags:['Sanitation']},expectedUpdatedAt:saved.updatedAt})).status,200);
+    assert.equal((await send('/api/examples','PUT',{example:{...saved,title:'Updated example',tags:['Sanitation'],recallQuestion:'What changed in community sanitation?'},expectedUpdatedAt:saved.updatedAt})).status,200);
     const edited=(await send('/api/examples')).data.examples[0];
     assert.equal(edited.title,'Updated example');
+    assert.equal(edited.recallQuestion,'What changed in community sanitation?');
     assert.equal(edited.contentHtml,example.contentHtml);
     assert.deepEqual(edited.subjects,example.subjects);
     await send('/api/examples','DELETE',{id:saved.id},'other');

@@ -4,9 +4,15 @@ export type RecallRecord = {fingerprint:string;grade:RecallGrade;streak:number;r
 export type RecallProgress = Record<string,RecallRecord>;
 const DAY=24*60*60*1000;
 const INTERVALS=[1,3,7,14,30];
-export function exampleFingerprint(entry:Pick<Article,'contentHtml'|'sourceName'|'sourceUrl'>):string {
+export function recallCue(entry:Pick<Article,'recallQuestion'|'tags'|'subjects'>):string {
+ return entry.recallQuestion?.trim()||(entry.tags.length?entry.tags.slice(0,2).join(' · '):entry.subjects.join(' · '));
+}
+export function exampleFingerprint(entry:Pick<Article,'contentHtml'|'sourceName'|'sourceUrl'|'recallQuestion'>):string {
  let hash=2166136261;
- for(const character of JSON.stringify([entry.contentHtml,entry.sourceName,entry.sourceUrl])){hash^=character.charCodeAt(0);hash=Math.imul(hash,16777619);}
+ const values=[entry.contentHtml,entry.sourceName,entry.sourceUrl];
+ // Preserve existing practice history until a custom question is introduced.
+ if(entry.recallQuestion?.trim())values.push(entry.recallQuestion.trim());
+ for(const character of JSON.stringify(values)){hash^=character.charCodeAt(0);hash=Math.imul(hash,16777619);}
  return (hash>>>0).toString(16);
 }
 export function currentRecall(entry:Article,progress:RecallProgress):RecallRecord|undefined {

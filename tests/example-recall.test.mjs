@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { build } from 'esbuild';
 const bundle=await build({entryPoints:['app/example-recall.ts'],bundle:true,write:false,format:'esm',platform:'node'});
-const {reviewExample,isDue,currentRecall,prioritiseExamples,parseRecallProgress}=await import('data:text/javascript;base64,'+Buffer.from(bundle.outputFiles[0].text).toString('base64'));
+const {reviewExample,isDue,currentRecall,prioritiseExamples,parseRecallProgress,recallCue}=await import('data:text/javascript;base64,'+Buffer.from(bundle.outputFiles[0].text).toString('base64'));
 const textBundle=await build({entryPoints:['app/example-text.ts'],bundle:true,write:false,format:'esm',platform:'node'});
 const {textMarkup}=await import('data:text/javascript;base64,'+Buffer.from(textBundle.outputFiles[0].text).toString('base64'));
 const entry={id:'water',title:'Water',contentHtml:'<p>A short example.</p>',sourceName:'Source, 2024',sourceUrl:'',subjects:['General'],gsPaper:['GS II'],tags:['Water'],summary:'',newsDate:'2026-11-17',status:'Unread',bookmarked:false};
@@ -41,4 +41,22 @@ test('damaged or invalid browser history is safely ignored',()=>{
 });
 test('plain example editing escapes HTML and preserves line breaks',()=>{
  assert.equal(textMarkup('A <script>alert("x")</script>\nSource & context'),'<p>A &lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;<br>Source &amp; context</p>');
+});
+
+test('custom recall questions override the automatic cue, and blank questions restore it',()=>{
+ assert.equal(recallCue(entry),'Water');
+ assert.equal(recallCue({...entry,recallQuestion:'  What does this example demonstrate?  '}),'What does this example demonstrate?');
+ assert.equal(recallCue({...entry,recallQuestion:'  '}),'Water');
+ assert.equal(recallCue({...entry,tags:[]}),'General');
+});
+test('changing a custom question restarts recall without resetting legacy blank-question history',()=>{
+ const remembered=reviewExample(entry,undefined,'remembered',now);
+ assert.deepEqual(currentRecall({...entry,recallQuestion:''},{water:remembered}),remembered);
+ assert.deepEqual(currentRecall({...entry,recallQuestion:'   '},{water:remembered}),remembered);
+ const changed={...entry,recallQuestion:'How does this improve sanitation?'};
+ assert.equal(currentRecall(changed,{water:remembered}),undefined);
+ const reviewed=reviewExample(changed,remembered,'remembered',now+day);
+ assert.equal(reviewed.streak,1);
+ assert.equal(currentRecall({...changed,recallQuestion:''},{water:reviewed}),undefined);
+ assert.deepEqual(currentRecall({...changed,bookmarked:true},{water:reviewed}),reviewed);
 });

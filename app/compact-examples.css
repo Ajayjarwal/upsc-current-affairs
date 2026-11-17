@@ -47,3 +47,24 @@
 .example-image-add{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px}.example-image-add small{font-size:12px;color:var(--secondary);line-height:1.5}
 .example-image-url{display:flex;align-items:flex-end;gap:10px}.example-image-url .field{flex:1;min-width:0;margin:0}.example-image-url .button{flex-shrink:0;min-height:42px}
 @media(max-width:620px){.example-image-tools{padding:12px}.example-image-url{align-items:stretch;flex-direction:column}.example-image-url .button{align-self:flex-start}.example-image-list img{width:64px;height:64px}}
+
+/* Compact subject and action bar for expanded examples. */
+.example-expanded-footer{flex-wrap:nowrap;align-items:center;gap:12px;margin-top:12px}
+.example-expanded-footer .example-expanded-tags{margin-top:0;flex:1;min-width:0}
+.example-expanded-tags>span{font-size:12px;line-height:1.5;padding:4px 8px}
+.example-expanded-footer .example-row-actions{flex-shrink:0;flex-wrap:nowrap;align-items:center;gap:6px;margin-left:0}
+.example-expanded-footer .icon-btn{display:flex;align-items:center;justify-content:center;width:32px;height:32px;padding:7px}
+.example-expanded-content{padding-top:0;padding-bottom:14px}
+.example-source{margin-bottom:0}
+.practice-prompt-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:9px}
+.practice-prompt-heading .practice-label{margin-bottom:0}
+.practice-prompt-heading .text-btn{display:flex;align-items:center;gap:6px;font-size:12px}
+.practice-prompt h2{overflow-wrap:anywhere;white-space:pre-line}
+.example-recall-question textarea{min-height:76px!important}
+.recall-question-editor{width:560px;max-width:100%;max-height:calc(100dvh - 32px);overflow:auto;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:10px;box-shadow:0 20px 80px #0002}
+.recall-question-editor h2{font-family:Georgia,serif;font-size:25px;font-weight:400}
+.recall-question-fields{padding:22px 24px}
+.recall-question-fields textarea{background:var(--input);color:var(--text);border-color:var(--border);font-size:16px;line-height:1.6;resize:vertical}
+.recall-question-fields>p{font-size:13px;line-height:1.6;color:var(--secondary);margin-top:12px}
+.recall-question-editor .editor-footer{justify-content:flex-end}
+.recall-question-editor .editor-footer>div{display:flex;gap:9px}

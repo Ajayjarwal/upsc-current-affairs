@@ -16,6 +16,7 @@ export const articleSchema = z.preprocess(value => {
   newsDate: date,
   gsPaper: z.array(z.enum(PAPERS as [string,...string[]])).max(5).default([]),
   summary: z.string().max(2000).default(''),
+  recallQuestion: z.string().trim().max(500,'Keep the recall question within 500 characters.').optional(),
   contentHtml: z.string().min(1).max(1_500_000,'This article has too many images. Remove an image or use image URLs.'),
   sourceName: z.string().max(150).default(''),
   sourceUrl: z.union([z.literal(''),z.string().url().max(2000).refine(s=>/^https?:\/\//i.test(s),'Use an http or https URL')]).default(''),
