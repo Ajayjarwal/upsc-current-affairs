@@ -28,3 +28,9 @@ export const authGoogleOauthStates = sqliteTable('auth_google_oauth_states', {
   returnTo: text('return_to').notNull(),
   expiresAt: integer('expires_at').notNull(),
 }, t => [index('auth_google_oauth_states_expiry').on(t.expiresAt)]);
+
+// Examples are independent of the current affairs collection.
+export const examples = sqliteTable('examples', {
+  id: text('id').notNull(), userId: text('user_id').notNull(), data: text('data').notNull(),
+  createdAt: text('created_at').notNull(), updatedAt: text('updated_at').notNull(),
+}, t => [primaryKey({columns:[t.userId,t.id]})]);

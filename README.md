@@ -1,6 +1,6 @@
 # Current Affairs — UPSC Desk
 
-A private UPSC current news notebook using React, Vinext, Cloudflare Workers and D1.
+A private UPSC news notebook using React, Vinext, Cloudflare Workers and D1.
 
 For independent hosting from GitHub, follow [CLOUDFLARE_DEPLOYMENT.md](CLOUDFLARE_DEPLOYMENT.md).
 
@@ -77,3 +77,11 @@ external URLs remain links to their original host. Individual embedded images
 are capped at 400,000 characters and article HTML at 1,500,000 characters, with
 an additional UTF-8 row-size check before saving. Large articles should use
 image URLs or split content across notes. JSON import remains limited to 3 MB.
+
+## Examples collection
+
+Open **Examples** in the sidebar to store cases, initiatives and stories separately from current affairs. Each example supports multiple subjects, one or more GS papers (I–IV), custom topic tags, rich notes, sources, bookmarks and revision status. Topic filters and exports only use the selected collection.
+
+Examples import and export use `schema: "upsc-examples/1"` with an `examples` array. Each example includes `id`, `title`, `subjects`, `gsPaper`, `tags`, and `contentHtml`; `summary`, sources, status and bookmark are optional. A news date is not required. The import dialog provides a template and a ChatGPT prompt for suggesting relevant topic tags from supplied material. Review facts and tags before saving.
+
+Deployment applies `0003_examples.sql` before publishing. It adds a separate examples table without modifying current affairs records.

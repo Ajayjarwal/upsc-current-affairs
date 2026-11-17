@@ -19,3 +19,9 @@ html[data-reading-palette] .recall-reader .article{max-width:950px}
 @media(max-width:1000px){.recall-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.collection-tools{flex-wrap:wrap}.collection-tools .search-box{min-width:240px}}
 @media(max-width:620px){.collection-view-switch{order:0}.collection-tools .search-box{order:-1;flex-basis:100%;min-width:0}.collection-tools .filter-btn{margin-left:auto}.recall-collection{padding:20px 16px;min-height:360px}.recall-grid{grid-template-columns:1fr;gap:12px}.recall-card{min-height:112px;padding:21px}.recall-card h2{font-size:20px}.recall-reader .reader-kicker{display:none}.recall-reader .reader-toolbar{flex-wrap:wrap;row-gap:10px}.recall-reader .reader-toolbar>div{margin-left:auto}.collection-view-switch .button{padding-inline:9px!important}}
 @media(prefers-reduced-motion:reduce){.recall-collection,.recall-reader{animation:none}.recall-card{transition:none}.recall-card:hover{transform:none}}
+
+.workspace-sections{border-bottom:1px solid var(--border);padding-bottom:14px;margin-bottom:14px}
+.example-tag-suggestions{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin:-8px 0 24px}
+.example-tag-suggestions>span{font-size:12px;color:var(--secondary);margin-right:3px}
+html[data-reading-palette] .example-tag-suggestions .button{font-size:12px;padding:6px 9px;white-space:normal;text-align:left}
+html[data-reading-palette] .example-tag-suggestions .button[aria-pressed="true"]{background:var(--selected);border-color:var(--accent);color:var(--accent)}
