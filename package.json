@@ -62,6 +62,7 @@
     "eslint": "9.39.4",
     "eslint-config-next": "16.3.4",
     "json-rpc-2.0": "1.7.1",
+    "linkedom": "^0.18.15",
     "miniflare": "4.20260515.0",
     "raw-body": "3.0.2",
     "react-server-dom-webpack": "19.2.6",
