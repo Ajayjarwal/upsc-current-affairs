@@ -5,7 +5,7 @@ const bundle=await build({entryPoints:['app/example-recall.ts'],bundle:true,writ
 const {reviewExample,isDue,currentRecall,prioritiseExamples,parseRecallProgress,recallCue}=await import('data:text/javascript;base64,'+Buffer.from(bundle.outputFiles[0].text).toString('base64'));
 const textBundle=await build({entryPoints:['app/example-text.ts'],bundle:true,write:false,format:'esm',platform:'node'});
 const {textMarkup}=await import('data:text/javascript;base64,'+Buffer.from(textBundle.outputFiles[0].text).toString('base64'));
-const entry={id:'water',title:'Water',contentHtml:'<p>A short example.</p>',sourceName:'Source, 2024',sourceUrl:'',subjects:['General'],gsPaper:['GS II'],tags:['Water'],summary:'',newsDate:'2026-11-17',status:'Unread',bookmarked:false};
+const entry={id:'water',title:'Water',contentHtml:'<p>A short example.</p>',sourceName:'Source, 2024',sourceUrl:'',subjects:['Agriculture'],gsPaper:['GS II'],tags:['Water'],summary:'',newsDate:'2026-11-17',status:'Unread',bookmarked:false};
 const now=Date.UTC(2026,10,17,8);
 const day=86400000;
 test('new examples are due; self-ratings set appropriate next reviews and survive serialization',()=>{
@@ -47,7 +47,7 @@ test('custom recall questions override the automatic cue, and blank questions re
  assert.equal(recallCue(entry),'Water');
  assert.equal(recallCue({...entry,recallQuestion:'  What does this example demonstrate?  '}),'What does this example demonstrate?');
  assert.equal(recallCue({...entry,recallQuestion:'  '}),'Water');
- assert.equal(recallCue({...entry,tags:[]}),'General');
+ assert.equal(recallCue({...entry,tags:[]}),'Agriculture');
 });
 test('changing a custom question restarts recall without resetting legacy blank-question history',()=>{
  const remembered=reviewExample(entry,undefined,'remembered',now);

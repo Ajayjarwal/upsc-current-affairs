@@ -13,7 +13,7 @@ export const exampleSchema = z.preprocess(value => {
   }
 });
 export const blankExample = (): Article => ({
-  id: crypto.randomUUID(), title: '', subjects: ['General'], tags: [], newsDate: today(), gsPaper: [], summary: '',
+  id: crypto.randomUUID(), title: '', subjects: ['Agriculture'], tags: [], newsDate: today(), gsPaper: [], summary: '',
   contentHtml: '<p><br></p>',
   sourceName: '', sourceUrl: '', status: 'Unread', bookmarked: false, recallQuestion: '',
 });

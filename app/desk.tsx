@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTheme } from 'next-themes';
-import { BookOpen, Search, Plus, Bookmark, ArrowUpRight, ArrowDownToLine, Upload, ChevronRight, ChevronLeft, X, SlidersHorizontal, CalendarDays, Globe2, Landmark, Leaf, FlaskConical, Mountain, History, Users, Shield, Scale, Layers3, Check, Pencil, Trash2, Bold, Italic, Underline, List, ListOrdered, Link2, Table2, Highlighter, PanelLeftClose, Sparkles, FileText, RefreshCw, Menu, AlertCircle, ImagePlus, ChevronDown, Moon, Sun, PanelLeftOpen, LayoutGrid } from 'lucide-react';
+import { BookOpen, Search, Plus, Bookmark, ArrowUpRight, ArrowDownToLine, Upload, ChevronRight, ChevronLeft, X, SlidersHorizontal, CalendarDays, Globe2, Landmark, Leaf, FlaskConical, Mountain, History, Users, Shield, Scale, Layers3, Check, Pencil, Trash2, Bold, Italic, Underline, List, ListOrdered, Link2, Table2, Highlighter, PanelLeftClose, Sparkles, FileText, RefreshCw, Menu, AlertCircle, ImagePlus, ChevronDown, Moon, Sun, PanelLeftOpen, LayoutGrid, Wheat } from 'lucide-react';
 import { Article, SUBJECTS, PAPERS, articleSchema, blankArticle, today } from './model';
 import { safeHtml, plainText } from './sanitize';
 import { useModal } from './use-modal';
@@ -12,9 +12,10 @@ import CompactExampleEditor from './compact-example-editor';
 import ImportHistory from './import-history';
 type Collection = 'articles' | 'examples';
 
-const subjectIcons=[Landmark,Layers3,Leaf,Globe2,FlaskConical,Mountain,History,Users,Shield,Scale,BookOpen];
-const shortSubject=(s:string)=>s.replace(' & Governance','').replace(' & Ecology','').replace(' & Social Justice','').replace(' & Integrity','');
-const colorFor=(s:string)=>['purple','amber','green','blue','rose','green','amber','purple','blue','rose','gray'][SUBJECTS.indexOf(s)]||'gray';
+const subjectIcons:Record<string,typeof BookOpen>={Agriculture:Wheat,Economy:Layers3,'Environment & Ecology':Leaf,Ethics:Scale,Geography:Mountain,History,'Internal Security':Shield,'International Relations':Globe2,'Polity & Governance':Landmark,'Science & Technology':FlaskConical,'Society & Social Justice':Users};
+const shortSubject=(s:string)=>s.replace(' & Governance','').replace(' & Ecology','').replace(' & Social Justice','');
+const subjectColors:Record<string,string>={Agriculture:'green',Economy:'amber','Environment & Ecology':'green',Ethics:'rose',Geography:'green',History:'amber','Internal Security':'blue','International Relations':'blue','Polity & Governance':'purple','Science & Technology':'rose','Society & Social Justice':'purple'};
+const colorFor=(s:string)=>subjectColors[s]||'gray';
 const dateLabel=(d:string,full=false)=>new Date(d+'T12:00:00').toLocaleDateString('en-IN',{day:'numeric',month:full?'long':'short',year:'numeric'});
 const monthLabel=(d:string)=>new Date(d.slice(0,7)+'-01T12:00:00').toLocaleDateString('en-IN',{month:'long',year:'numeric'});
 const download=(name:string,value:unknown)=>{const url=URL.createObjectURL(new Blob([JSON.stringify(value,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
@@ -90,7 +91,7 @@ export default function Desk({account,collection='articles'}:{account:Account;co
    <nav aria-label="Collections"><button className={'nav-item '+(view==='all'&&!selectedSubjects.length?'active':'')} onClick={()=>goSubject('All subjects')}><Layers3 size={18}/><span>{isExamples?'All examples':'All current affairs'}</span><b>{articles.length}</b></button>
    <button className={'nav-item '+(view==='bookmarks'?'active':'')} onClick={()=>{setCardReader(false);setReaderExpanded(false);setView('bookmarks');setSelectedSubjects([]);setSidebarOpen(false);setMobileReader(false);}}><Bookmark size={18}/><span>Bookmarked</span><b>{articles.filter(a=>a.bookmarked).length}</b></button></nav>
    <div className="nav-caption">SUBJECTS <span>{SUBJECTS.length}</span></div>
-   <nav aria-label="Subjects" className="subject-nav">{SUBJECTS.map((s,i)=>{const Icon=subjectIcons[i];return <button key={s} className={'nav-item '+(selectedSubjects.includes(s)?'active':'')} onClick={()=>goSubject(s)}><Icon size={17}/><span>{shortSubject(s)}</span><b>{articles.filter(a=>a.subjects.includes(s)).length||'–'}</b></button>;})}</nav>
+   <nav aria-label="Subjects" className="subject-nav">{SUBJECTS.map(s=>{const Icon=subjectIcons[s]||BookOpen;return <button key={s} className={'nav-item '+(selectedSubjects.includes(s)?'active':'')} onClick={()=>goSubject(s)}><Icon size={17}/><span>{shortSubject(s)}</span><b>{articles.filter(a=>a.subjects.includes(s)).length||'–'}</b></button>;})}</nav>
    <div className="sidebar-bottom"><button className="nav-item theme-toggle" role="switch" aria-label="Dark theme" aria-checked={darkTheme} onClick={()=>setTheme(darkTheme?'light':'dark')}><Moon size={18}/><span>Dark theme</span><span className="theme-switch" aria-hidden="true"><i/></span></button><AccountMenu account={account} onHistory={()=>{setSidebarOpen(false);setHistoryOpen(true);}}/></div>
   </aside>
   <button className={'nav-scrim '+(sidebarOpen?'is-open':'')} aria-label="Close navigation" aria-hidden={!sidebarOpen} tabIndex={-1} onClick={()=>setSidebarOpen(false)}/>

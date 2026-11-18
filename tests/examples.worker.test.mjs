@@ -46,7 +46,7 @@ test('examples keep their own records and tags, enforce ownership, and support e
     const saved=(await send('/api/examples')).data.examples[0];
     assert.equal(saved.contentHtml,example.contentHtml);
     assert.equal(saved.recallQuestion,example.recallQuestion);
-    assert.deepEqual(saved.subjects,example.subjects);
+    assert.deepEqual(saved.subjects,[...example.subjects].sort());
     assert.deepEqual(saved.tags,example.tags);
     assert.deepEqual(saved.gsPaper,example.gsPaper);
     assert.match(saved.newsDate,/^\d{4}-\d{2}-\d{2}$/);
@@ -59,7 +59,7 @@ test('examples keep their own records and tags, enforce ownership, and support e
     assert.equal(edited.title,'Updated example');
     assert.equal(edited.recallQuestion,'What changed in community sanitation?');
     assert.equal(edited.contentHtml,example.contentHtml);
-    assert.deepEqual(edited.subjects,example.subjects);
+    assert.deepEqual(edited.subjects,[...example.subjects].sort());
     await send('/api/examples','DELETE',{id:saved.id},'other');
     assert.equal((await send('/api/examples')).data.examples.length,1);
     await send('/api/examples','DELETE',{id:saved.id});
