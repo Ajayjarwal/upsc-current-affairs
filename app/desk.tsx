@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTheme } from 'next-themes';
-import { BookOpen, Search, Plus, Bookmark, ArrowUpRight, ArrowDownToLine, Upload, ChevronRight, ChevronLeft, X, SlidersHorizontal, CalendarDays, Globe2, Landmark, Leaf, FlaskConical, Mountain, History, Users, Shield, Scale, Layers3, Check, Pencil, Trash2, Bold, Italic, Underline, List, ListOrdered, Link2, Table2, Highlighter, PanelLeftClose, Sparkles, FileText, RefreshCw, Menu, AlertCircle, ImagePlus, ChevronDown, Moon, Sun, PanelLeftOpen, LayoutGrid, Wheat } from 'lucide-react';
+import { BookOpen, Search, Plus, Bookmark, ArrowUpRight, ArrowDownToLine, Upload, ChevronRight, ChevronLeft, X, SlidersHorizontal, CalendarDays, Globe2, Landmark, Leaf, FlaskConical, Mountain, History, Users, Shield, Scale, Layers3, Check, Pencil, Trash2, Bold, Italic, Underline, List, ListOrdered, Link2, Table2, Highlighter, PanelLeftClose, Sparkles, FileText, RefreshCw, Menu, AlertCircle, ImagePlus, ChevronDown, Moon, Sun, PanelLeftOpen, LayoutGrid, Wheat, FileDown } from 'lucide-react';
 import { Article, SUBJECTS, PAPERS, articleSchema, blankArticle, today } from './model';
 import { safeHtml, plainText } from './sanitize';
 import { useModal } from './use-modal';
@@ -10,6 +10,7 @@ import { blankExample, exampleSchema, EXAMPLE_PAPERS, EXAMPLE_TOPIC_SUGGESTIONS,
 import ExamplesBank from './examples-bank';
 import CompactExampleEditor from './compact-example-editor';
 import ImportHistory from './import-history';
+import PdfExport from './pdf-export';
 type Collection = 'articles' | 'examples';
 
 const subjectIcons:Record<string,typeof BookOpen>={Agriculture:Wheat,Economy:Layers3,'Environment & Ecology':Leaf,Ethics:Scale,Geography:Mountain,History,'Internal Security':Shield,'International Relations':Globe2,'Polity & Governance':Landmark,'Science & Technology':FlaskConical,'Society & Social Justice':Users};
@@ -45,7 +46,7 @@ export default function Desk({account,collection='articles'}:{account:Account;co
  const [selectedSubjects,setSelectedSubjects]=useState<string[]>([]);
  const [view,setView]=useState('all'),[search,setSearch]=useState(''),[tag,setTag]=useState(''),[month,setMonth]=useState(''),[year,setYear]=useState(''),[paper,setPaper]=useState(''),[status,setStatus]=useState(''),[sort,setSort]=useState('newest');
  const [filters,setFilters]=useState(false),[selected,setSelected]=useState<string|null>(null),[editor,setEditor]=useState<Article|null>(null),[importOpen,setImportOpen]=useState(false),[toast,setToast]=useState(''),[sidebarOpen,setSidebarOpen]=useState(false),[mobileReader,setMobileReader]=useState(false),[busy,setBusy]=useState(false);
- const [historyOpen,setHistoryOpen]=useState(false);
+ const [historyOpen,setHistoryOpen]=useState(false),[pdfOpen,setPdfOpen]=useState(false);
  const [discardAction,setDiscardAction]=useState<null|(()=>void)>(null);
  const searchRef=useRef<HTMLInputElement>(null),menuRef=useRef<HTMLButtonElement>(null),closeNavRef=useRef<HTMLButtonElement>(null);
  const [readerExpanded,setReaderExpanded]=useState(false);
@@ -92,7 +93,7 @@ export default function Desk({account,collection='articles'}:{account:Account;co
    <button className={'nav-item '+(view==='bookmarks'?'active':'')} onClick={()=>{setCardReader(false);setReaderExpanded(false);setView('bookmarks');setSelectedSubjects([]);setSidebarOpen(false);setMobileReader(false);}}><Bookmark size={18}/><span>Bookmarked</span><b>{articles.filter(a=>a.bookmarked).length}</b></button></nav>
    <div className="nav-caption">SUBJECTS <span>{SUBJECTS.length}</span></div>
    <nav aria-label="Subjects" className="subject-nav">{SUBJECTS.map(s=>{const Icon=subjectIcons[s]||BookOpen;return <button key={s} className={'nav-item '+(selectedSubjects.includes(s)?'active':'')} onClick={()=>goSubject(s)}><Icon size={17}/><span>{shortSubject(s)}</span><b>{articles.filter(a=>a.subjects.includes(s)).length||'–'}</b></button>;})}</nav>
-   <div className="sidebar-bottom"><button className="nav-item theme-toggle" role="switch" aria-label="Dark theme" aria-checked={darkTheme} onClick={()=>setTheme(darkTheme?'light':'dark')}><Moon size={18}/><span>Dark theme</span><span className="theme-switch" aria-hidden="true"><i/></span></button><AccountMenu account={account} onHistory={()=>{setSidebarOpen(false);setHistoryOpen(true);}}/></div>
+   <div className="sidebar-bottom"><button className="nav-item theme-toggle" role="switch" aria-label="Dark theme" aria-checked={darkTheme} onClick={()=>setTheme(darkTheme?'light':'dark')}><Moon size={18}/><span>Dark theme</span><span className="theme-switch" aria-hidden="true"><i/></span></button><AccountMenu account={account} onPdf={()=>{setSidebarOpen(false);setPdfOpen(true);}} onHistory={()=>{setSidebarOpen(false);setHistoryOpen(true);}}/></div>
   </aside>
   <button className={'nav-scrim '+(sidebarOpen?'is-open':'')} aria-label="Close navigation" aria-hidden={!sidebarOpen} tabIndex={-1} onClick={()=>setSidebarOpen(false)}/>
   <main>
@@ -127,6 +128,7 @@ export default function Desk({account,collection='articles'}:{account:Account;co
   </main>
   {editor&&(isExamples?<CompactExampleEditor entry={editor} onSave={save} onClose={()=>setEditor(null)} onRemove={()=>setDiscardAction(()=>async()=>{await removeEntry(editor);setEditor(null);})}/>:<Editor article={editor} onSave={save} onClose={()=>setEditor(null)}/>)}
   {importOpen&&<ImportModal isExamples={isExamples} existing={articles} onClose={()=>setImportOpen(false)} onImport={async(a,sourceName)=>{const d=await api('POST',{articles:a,import:{sourceName}});await reload();setImportOpen(false);reset();setSelected(a[0]?.id);setToast(d.inserted+(isExamples?' examples imported. ':' notes imported. ')+(a.length-d.inserted)+' duplicates skipped.');}}/>}
+  {pdfOpen&&<PdfExport initialCollection={collection} onClose={()=>setPdfOpen(false)}/>}
   {historyOpen&&<ImportHistory onClose={()=>setHistoryOpen(false)} onChange={reload}/>}
   {discardAction&&<div className="overlay"><section role="alertdialog" aria-modal="true" aria-labelledby="delete-title" className="confirm-dialog"><h2 id="delete-title">{isExamples?'Delete this example?':'Delete this note?'}</h2><p>This removes the entry from your collection. Export a backup first if you want to keep a copy.</p><div className="modal-actions"><button className="button secondary" onClick={()=>setDiscardAction(null)}>{isExamples?'Keep example':'Keep note'}</button><button className="button danger" disabled={busy} onClick={discardAction}>{busy?'Deleting…':(isExamples?'Delete example':'Delete note')}</button></div></section></div>}
   {toast&&<div className="toast" role="status"><span>{toast}</span><button className="icon-btn" aria-label="Dismiss notification" onClick={()=>setToast('')}><X size={16}/></button></div>}
@@ -134,11 +136,11 @@ export default function Desk({account,collection='articles'}:{account:Account;co
 }
 
 
-function AccountMenu({account,onHistory}:{account:Account;onHistory:()=>void}) {
+function AccountMenu({account,onHistory,onPdf}:{account:Account;onHistory:()=>void;onPdf:()=>void}) {
  const [open,setOpen]=useState(false);
  const root=useRef<HTMLDivElement>(null),button=useRef<HTMLButtonElement>(null);
  useEffect(()=>{if(!open)return;const outside=(e:PointerEvent)=>{if(!root.current?.contains(e.target as Node))setOpen(false);};const key=(e:KeyboardEvent)=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();setOpen(false);button.current?.focus();}};document.addEventListener('pointerdown',outside);document.addEventListener('keydown',key,true);return()=>{document.removeEventListener('pointerdown',outside);document.removeEventListener('keydown',key,true);};},[open]);
- return <div className="account-control sidebar-account" ref={root}><button ref={button} className="account-button" aria-label="My account" aria-expanded={open} aria-controls="account-details" onClick={()=>setOpen(value=>!value)}><span className="avatar small">A</span><span>My account</span><ChevronDown size={13}/></button>{open&&<div className="account-details" id="account-details"><small>SIGNED IN</small><strong>{account.displayName}</strong><span>{account.email}</span><button className="account-history-button" onClick={()=>{setOpen(false);onHistory();}}><History size={16}/> Import history</button><a href={account.signOutUrl}>Sign out <ArrowUpRight size={14}/></a></div>}</div>;
+ return <div className="account-control sidebar-account" ref={root}><button ref={button} className="account-button" aria-label="My account" aria-expanded={open} aria-controls="account-details" onClick={()=>setOpen(value=>!value)}><span className="avatar small">A</span><span>My account</span><ChevronDown size={13}/></button>{open&&<div className="account-details" id="account-details"><small>SIGNED IN</small><strong>{account.displayName}</strong><span>{account.email}</span><button className="account-history-button" onClick={()=>{setOpen(false);onHistory();}}><History size={16}/> Import history</button><button className="account-history-button" onClick={()=>{setOpen(false);onPdf();}}><FileDown size={16}/> Export to PDF</button><a href={account.signOutUrl}>Sign out <ArrowUpRight size={14}/></a></div>}</div>;
 }
 
 function Welcome({onNew,onImport,isExamples=false}:{onNew:()=>void;onImport:()=>void;isExamples?:boolean}) {

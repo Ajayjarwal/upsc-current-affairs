@@ -11,8 +11,10 @@ export function safeHtml(html:string):string {
       const href=el.getAttribute('href'); const color=(el as HTMLElement).style.color || el.getAttribute('color'); const bg=(el as HTMLElement).style.backgroundColor;
       const imageSource=el.tagName==='IMG'?safeImageSource(el.getAttribute('src')):null;
       const imageAlt=el.getAttribute('alt')||'';
+      const colspan=el.getAttribute('colspan'),rowspan=el.getAttribute('rowspan');
       if(el.tagName==='IMG'&&!imageSource){el.remove();continue;}
       for(const a of Array.from(el.attributes)) el.removeAttribute(a.name);
+      if(['TD','TH'].includes(el.tagName))for(const [name,value] of [['colspan',colspan],['rowspan',rowspan]]){if(value&&/^\d+$/.test(value)&&Number(value)>=1&&Number(value)<=100)el.setAttribute(name!,value);}
       if(el.tagName==='IMG'&&imageSource){el.setAttribute('src',imageSource);el.setAttribute('alt',imageAlt.slice(0,500));el.setAttribute('loading','lazy');el.setAttribute('decoding','async');el.setAttribute('referrerpolicy','no-referrer');}
       if(el.tagName==='A' && href && /^https?:\/\//i.test(href)) { el.setAttribute('href',href);el.setAttribute('target','_blank');el.setAttribute('rel','noopener noreferrer'); }
       if(color && /^(#[a-f0-9]{3,8}|rgba?\([\d.,%\s]+\)|[a-z]+)$/i.test(color)) (el as HTMLElement).style.color=color;
