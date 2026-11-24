@@ -68,3 +68,23 @@
 .recall-question-fields>p{font-size:13px;line-height:1.6;color:var(--secondary);margin-top:12px}
 .recall-question-editor .editor-footer{justify-content:flex-end}
 .recall-question-editor .editor-footer>div{display:flex;gap:9px}
+
+/* Small title cards keep example reading in a compact dialog. */
+.example-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.example-recall-card{display:flex;align-items:center;min-height:92px;padding:16px 18px;text-align:left;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);transition:background-color .18s,border-color .18s,transform .18s}
+.example-recall-card h2{font-family:Georgia,serif;font-size:18px;font-weight:700;line-height:1.45;overflow-wrap:anywhere;margin:0}
+.example-recall-card:hover{background:var(--hover);border-color:var(--accent);transform:translateY(-2px)}
+.example-recall-card:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.example-card-dialog{display:flex;flex-direction:column;width:720px;max-width:100%;max-height:calc(100dvh - 48px);overflow:hidden;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:10px;box-shadow:0 20px 80px #0002;animation:recall-enter .22s ease}
+.example-card-dialog .modal-header{align-items:flex-start;gap:16px;flex-shrink:0}
+.example-card-dialog h2{font-family:Georgia,serif;font-size:25px;font-weight:700;line-height:1.4;overflow-wrap:anywhere}
+.example-card-dialog .modal-header .icon-btn{flex-shrink:0}
+.example-card-body{padding:22px 26px;min-height:0;overflow:auto}
+.example-shuffle-toggle{display:flex;align-items:center;gap:6px;font-size:13px;line-height:1.5;color:var(--secondary);cursor:pointer;white-space:nowrap}
+.example-shuffle-toggle input{width:15px;height:15px;accent-color:var(--accent)}
+.examples-bank-tools>div{align-items:center;flex-wrap:wrap}
+.recall-round-tools{display:flex;align-items:center;justify-content:flex-end;gap:16px;flex-wrap:wrap}
+.recall-round-tools .text-btn{display:flex;align-items:center;gap:6px;font-size:13px}
+@media(max-width:620px){.example-card-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.example-recall-card{min-height:84px;padding:14px}.example-recall-card h2{font-size:17px}.example-card-dialog{max-height:calc(100dvh - 24px)}.example-card-body{padding:18px}.example-card-dialog h2{font-size:22px}.example-shuffle-toggle{flex-basis:100%}.recall-round-tools{gap:8px;justify-content:space-between}.example-practice>header{align-items:flex-start;flex-wrap:wrap}}
+@media(max-width:380px){.example-card-grid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.example-recall-card{transition:none}.example-recall-card:hover{transform:none}.example-card-dialog{animation:none}}

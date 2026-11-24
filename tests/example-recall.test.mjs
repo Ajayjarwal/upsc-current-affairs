@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { build } from 'esbuild';
 const bundle=await build({entryPoints:['app/example-recall.ts'],bundle:true,write:false,format:'esm',platform:'node'});
-const {reviewExample,isDue,currentRecall,prioritiseExamples,parseRecallProgress,recallCue}=await import('data:text/javascript;base64,'+Buffer.from(bundle.outputFiles[0].text).toString('base64'));
+const {reviewExample,isDue,currentRecall,prioritiseExamples,parseRecallProgress,recallCue,shuffleExamples}=await import('data:text/javascript;base64,'+Buffer.from(bundle.outputFiles[0].text).toString('base64'));
 const textBundle=await build({entryPoints:['app/example-text.ts'],bundle:true,write:false,format:'esm',platform:'node'});
 const {textMarkup}=await import('data:text/javascript;base64,'+Buffer.from(textBundle.outputFiles[0].text).toString('base64'));
 const entry={id:'water',title:'Water',contentHtml:'<p>A short example.</p>',sourceName:'Source, 2024',sourceUrl:'',subjects:['Agriculture'],gsPaper:['GS II'],tags:['Water'],summary:'',newsDate:'2026-11-17',status:'Unread',bookmarked:false};
@@ -59,4 +59,23 @@ test('changing a custom question restarts recall without resetting legacy blank-
  assert.equal(reviewed.streak,1);
  assert.equal(currentRecall({...changed,recallQuestion:''},{water:reviewed}),undefined);
  assert.deepEqual(currentRecall({...changed,bookmarked:true},{water:reviewed}),reviewed);
+});
+
+test('shuffle changes recall order without mutating entries or saved progress',()=>{
+ const entries=Array.from({length:5},(_,index)=>({...entry,id:'example-'+index}));
+ const progress={};for(const item of entries)progress[item.id]=reviewExample(item,undefined,'remembered',now);
+ const before=JSON.stringify(progress),shuffled=shuffleExamples(entries,0,()=>0);
+ assert.deepEqual(shuffled.map(item=>item.id),['example-1','example-2','example-3','example-4','example-0']);
+ assert.deepEqual(entries.map(item=>item.id),['example-0','example-1','example-2','example-3','example-4']);
+ assert.equal(new Set(shuffled.map(item=>item.id)).size,entries.length);
+ for(const item of shuffled)assert.deepEqual(currentRecall(item,progress),progress[item.id]);
+ assert.equal(JSON.stringify(progress),before);
+});
+test('shuffling an active round preserves completed questions and keeps every remaining example once',()=>{
+ const entries=Array.from({length:6},(_,index)=>({...entry,id:'example-'+index}));
+ const shuffled=shuffleExamples(entries,2,()=>0);
+ assert.deepEqual(shuffled.slice(0,2),entries.slice(0,2));
+ assert.deepEqual(shuffled.slice(2).map(item=>item.id),['example-3','example-4','example-5','example-2']);
+ for(const list of [[],[entry]])assert.deepEqual(shuffleExamples(list),list);
+ assert.deepEqual(shuffleExamples(entries,entries.length),entries);
 });

@@ -32,6 +32,15 @@ export function prioritiseExamples(entries:Article[],progress:RecallProgress,now
  const rank=(entry:Article)=>{const record=currentRecall(entry,progress);return !record?1:record.dueAt>now?3:record.grade==='forgot'?0:1;};
  return [...entries].sort((a,b)=>rank(a)-rank(b)||(currentRecall(a,progress)?.dueAt??0)-(currentRecall(b,progress)?.dueAt??0));
 }
+// Fisher–Yates shuffles a copy; an in-progress round keeps its completed prefix.
+export function shuffleExamples(entries:Article[],fromIndex=0,random= Math.random):Article[] {
+ const shuffled=[...entries],start=Math.max(0,Math.min(entries.length,Math.trunc(fromIndex)));
+ for(let index=shuffled.length-1;index>start;index--){
+  const other=start+Math.floor(random()*(index-start+1));
+  [shuffled[index],shuffled[other]]=[shuffled[other],shuffled[index]];
+ }
+ return shuffled;
+}
 export function parseRecallProgress(value:string|null):RecallProgress {
  try{
   const parsed=JSON.parse(value??'{}');if(!parsed||typeof parsed!=='object'||Array.isArray(parsed))return {};
