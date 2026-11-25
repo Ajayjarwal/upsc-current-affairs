@@ -38,7 +38,8 @@ export async function POST(req:Request) {
 }
 export async function PUT(req:Request) {
   try { const {db,userId}=await context(req,true); const {article,expectedUpdatedAt}=z.object({article:articleSchema,expectedUpdatedAt:z.string().min(1)}).parse(await body(req));
-    const now=new Date().toISOString();
+    const previous=Date.parse(expectedUpdatedAt);
+    const now=new Date(Math.max(Date.now(),Number.isFinite(previous)?previous+1:0)).toISOString();
     const r=await db.prepare('UPDATE articles SET data=?, updated_at=? WHERE id=? AND user_id=? AND updated_at=?').bind(JSON.stringify(article),now,article.id,userId,expectedUpdatedAt).run();
     if(!r.meta.changes) return json({error:'This note changed in another tab. Close the editor and reload before editing again.'},409);
     return json({updatedAt:now});

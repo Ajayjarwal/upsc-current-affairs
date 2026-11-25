@@ -43,3 +43,9 @@ export const importBatches = sqliteTable('import_batches', {
   sourceName: text('source_name').notNull(), createdAt: text('created_at').notNull(),
   requestedCount: integer('requested_count').notNull(), insertedCount: integer('inserted_count').notNull().default(0),
 }, t => [primaryKey({columns:[t.userId,t.id]}), index('import_batches_user_date').on(t.userId,t.createdAt,t.id)]);
+
+export const noteVersions = sqliteTable('note_versions', {
+ id: integer('id').primaryKey({autoIncrement:true}), userId:text('user_id').notNull(),
+ collection:text('collection').notNull(), entryId:text('entry_id').notNull(), data:text('data').notNull(),
+ savedAt:text('saved_at').notNull(), archivedAt:text('archived_at').notNull(),
+}, t=>[index('note_versions_entry').on(t.userId,t.collection,t.entryId,t.id)]);
