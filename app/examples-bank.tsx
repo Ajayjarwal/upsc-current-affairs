@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { Bookmark, Pencil, Plus, Brain, ArrowLeft, RotateCcw, Check, Eye, ChevronDown, Shuffle, X } from 'lucide-react';
+import { Bookmark, Pencil, Plus, Brain, ArrowLeft, RotateCcw, Check, Eye, ChevronDown, ChevronLeft, ChevronRight, Shuffle, X } from 'lucide-react';
 import type { Article } from './model';
 import RecallQuestionEditor from './recall-question-editor';
 import { useModal } from './use-modal';
@@ -26,10 +26,36 @@ function ExampleDetails({entry,busy,onBookmark,onEdit}:{entry:Article;busy:boole
  const body=exampleBody(entry);
  return <><p className="example-sentence" dangerouslySetInnerHTML={{__html:body.html}}/><ExampleImages images={body.images}/><Source entry={entry}/><footer className="example-expanded-footer"><ExampleTags entry={entry}/><div className="example-row-actions"><button className="icon-btn" onClick={onBookmark} disabled={busy} aria-label={entry.bookmarked?'Remove example bookmark':'Bookmark example'} title={entry.bookmarked?'Remove bookmark':'Bookmark'}><Bookmark size={16} fill={entry.bookmarked?'currentColor':'none'}/></button><button className="icon-btn" disabled={busy} onClick={onEdit} aria-label="Edit example" title="Edit example"><Pencil size={16}/></button></div></footer></>;
 }
-function ExampleCardDialog({entry,busy,onClose,onBookmark,onEdit}:{entry:Article;busy:boolean;onClose:()=>void;onBookmark:()=>void;onEdit:()=>void}){
+function ExampleCardDialog({entry,busy,onClose,onBookmark,onEdit,onPrevious,onNext}:{
+ entry:Article;busy:boolean;onClose:()=>void;onBookmark:()=>void;onEdit:()=>void;
+ onPrevious?:()=>void;onNext?:()=>void;
+}){
  const ref=useModal(onClose);
+ const headingRef=useRef<HTMLHeadingElement>(null);
+ const bodyRef=useRef<HTMLDivElement>(null);
+ const startedOnBackdrop=useRef(false);
  useEffect(()=>{const previous=document.body.style.overflow;document.body.style.overflow='hidden';return()=>{document.body.style.overflow=previous;};},[]);
- return <div className="overlay"><section ref={ref} className="example-card-dialog" role="dialog" aria-modal="true" aria-labelledby="example-card-title"><header className="modal-header"><h2 id="example-card-title">{entry.title}</h2><button className="icon-btn" aria-label="Close example" onClick={onClose}><X size={20}/></button></header><div className="example-card-body"><ExampleDetails entry={entry} busy={busy} onBookmark={onBookmark} onEdit={onEdit}/></div></section></div>;
+ useEffect(()=>{
+  if(bodyRef.current)bodyRef.current.scrollTop=0;
+  headingRef.current?.focus();
+ },[entry.id]);
+ return <div className="overlay example-card-overlay"
+  onPointerDown={event=>{startedOnBackdrop.current=event.target===event.currentTarget;}}
+  onClick={event=>{if(startedOnBackdrop.current&&event.target===event.currentTarget)onClose();}}>
+  <section ref={ref} className="example-card-frame" role="dialog" aria-modal="true" aria-labelledby="example-card-title"
+   onKeyDown={event=>{
+    if(event.defaultPrevented||event.altKey||event.ctrlKey||event.metaKey||event.shiftKey)return;
+    const action=event.key==='ArrowLeft'?onPrevious:event.key==='ArrowRight'?onNext:undefined;
+    if(action){event.preventDefault();action();}
+   }}>
+   <button type="button" className="icon-btn example-card-nav" aria-label="Previous example" title="Previous example (←)" disabled={!onPrevious} onClick={onPrevious}><ChevronLeft size={22}/></button>
+   <div className="example-card-dialog">
+    <header className="modal-header"><h2 id="example-card-title" ref={headingRef} tabIndex={-1}>{entry.title}</h2><button className="icon-btn" aria-label="Close example" onClick={onClose}><X size={20}/></button></header>
+    <div ref={bodyRef} className="example-card-body"><ExampleDetails entry={entry} busy={busy} onBookmark={onBookmark} onEdit={onEdit}/></div>
+   </div>
+   <button type="button" className="icon-btn example-card-nav" aria-label="Next example" title="Next example (→)" disabled={!onNext} onClick={onNext}><ChevronRight size={22}/></button>
+  </section>
+ </div>;
 }
 function ExampleRow({entry,busy,onBookmark,onEdit}:{entry:Article;busy:boolean;onBookmark:()=>void;onEdit:()=>void}){
  const [expanded,setExpanded]=useState(false);
@@ -50,7 +76,8 @@ export default function ExamplesBank({layout,entries,loading,busy,hasEntries,sto
  function begin(pool=due.length?due:entries){if(!pool.length||!loaded)return;setSession({entries:shuffle?shuffleExamples(pool):prioritiseExamples(pool,progress),index:0,results:[]});setRevealed(false);}
  function shuffleRemaining(){if(!session)return;setSession({...session,entries:shuffleExamples(session.entries,session.index)});setRevealed(false);requestAnimationFrame(()=>questionRef.current?.focus());}
  useEffect(()=>{setSession(null);setRevealed(false);setCardId(null);},[layout]);
- const selectedCard=entries.find(entry=>entry.id===cardId);
+ const cardIndex=entries.findIndex(entry=>entry.id===cardId);
+ const selectedCard=entries[cardIndex];
  useEffect(()=>{if(session)questionRef.current?.focus();},[session?.index,!!session]);
  function leave(){setSession(null);setRevealed(false);requestAnimationFrame(()=>practiceRef.current?.focus());}
  useEffect(()=>{if(!session)return;const key=(event:KeyboardEvent)=>{if(event.key==='Escape'&&!document.querySelector('[role="dialog"],[role="alertdialog"]')){event.preventDefault();leave();}};document.addEventListener('keydown',key);return()=>document.removeEventListener('keydown',key);},[!!session]);
@@ -74,5 +101,5 @@ export default function ExamplesBank({layout,entries,loading,busy,hasEntries,sto
   const cue=recallCue(entry);
   return <section className="example-practice" aria-label="Practise recall"><header><button className="text-btn" onClick={leave}><ArrowLeft size={15}/> Back to examples</button><div className="recall-round-tools"><button className="text-btn" disabled={session.entries.length-session.index<2} onClick={shuffleRemaining}><Shuffle size={14}/> Shuffle remaining</button><span aria-live="polite">Example {session.index+1} of {session.entries.length}</span></div></header><progress aria-label="Examples reviewed" max={session.entries.length} value={session.index}/><div className="practice-prompt"><div className="practice-prompt-heading"><span className="practice-label">{entry.recallQuestion?.trim()?'RECALL QUESTION':'RECALL AN EXAMPLE ABOUT'}</span><button className="text-btn" onClick={()=>setQuestionOpen(true)}><Pencil size={14}/> Edit recall question</button></div><h2 ref={questionRef} tabIndex={-1}>{cue}</h2><p>Recall the key facts{body.source?' and source':''}, then reveal the example.</p></div>{revealed?<div className="practice-answer"><p className="example-sentence" dangerouslySetInnerHTML={{__html:body.html}}/><ExampleImages images={body.images}/><Source entry={entry}/><ExampleTags entry={entry}/></div>:<div className="practice-hidden"><Brain size={28}/><span>Take a moment to recall it.</span></div>}{!revealed?<button className="button primary reveal-example" onClick={()=>setRevealed(true)}><Eye size={16}/> Reveal example</button>:<div className="practice-rating"><p>How well did you remember it?</p><div className="practice-buttons"><button className="button secondary" onClick={()=>rate('forgot')}>Forgot</button><button className="button secondary" onClick={()=>rate('partly')}>Partly remembered</button><button className="button primary" onClick={()=>rate('remembered')}>Remembered</button></div></div>}<p className="practice-hint">Progress is saved in this browser.</p>{questionOpen&&<RecallQuestionEditor entry={entry} onSave={onSaveQuestion} onClose={()=>setQuestionOpen(false)}/>}{storageError&&<p className="form-error" role="alert">{storageError}</p>}</section>;
  }
- return <section className="examples-bank" aria-label="Expandable examples"><div className="examples-bank-tools"><span>{loaded?(due.length?due.length+' ready to review':'You’re up to date'):'Loading practice progress…'}</span><div><label className="example-shuffle-toggle"><input type="checkbox" checked={shuffle} onChange={event=>setShuffle(event.target.checked)}/><Shuffle size={14} aria-hidden="true"/> Shuffle recall</label><button className="button secondary" onClick={onNew}><Plus size={15}/> Add example</button><button ref={practiceRef} className="button primary" disabled={!loaded} onClick={()=>begin()}><Brain size={16}/> Practise recall</button></div></div>{layout==='cards'?<div className="example-card-grid" aria-label="Example cards">{entries.map(entry=><button key={entry.id} className="example-recall-card" aria-haspopup="dialog" onClick={()=>setCardId(entry.id)}><h2>{entry.title.split(/\s*[:：]\s*/)[0].trim()||entry.title}</h2></button>)}</div>:<div className="example-rows">{entries.map(entry=><ExampleRow key={entry.id} entry={entry} busy={busy} onBookmark={()=>onBookmark(entry)} onEdit={()=>onEdit(entry)}/>)}</div>}{layout==='cards'&&selectedCard&&<ExampleCardDialog entry={selectedCard} busy={busy} onClose={()=>setCardId(null)} onBookmark={()=>onBookmark(selectedCard)} onEdit={()=>{setCardId(null);onEdit(selectedCard);}}/>}{storageError&&<p className="form-error" role="alert">{storageError}</p>}</section>;
+ return <section className="examples-bank" aria-label="Expandable examples"><div className="examples-bank-tools"><span>{loaded?(due.length?due.length+' ready to review':'You’re up to date'):'Loading practice progress…'}</span><div><label className="example-shuffle-toggle"><input type="checkbox" checked={shuffle} onChange={event=>setShuffle(event.target.checked)}/><Shuffle size={14} aria-hidden="true"/> Shuffle recall</label><button className="button secondary" onClick={onNew}><Plus size={15}/> Add example</button><button ref={practiceRef} className="button primary" disabled={!loaded} onClick={()=>begin()}><Brain size={16}/> Practise recall</button></div></div>{layout==='cards'?<div className="example-card-grid" aria-label="Example cards">{entries.map(entry=><button key={entry.id} className="example-recall-card" aria-haspopup="dialog" onClick={()=>setCardId(entry.id)}><h2>{entry.title.split(/\s*[:：]\s*/)[0].trim()||entry.title}</h2></button>)}</div>:<div className="example-rows">{entries.map(entry=><ExampleRow key={entry.id} entry={entry} busy={busy} onBookmark={()=>onBookmark(entry)} onEdit={()=>onEdit(entry)}/>)}</div>}{layout==='cards'&&selectedCard&&<ExampleCardDialog entry={selectedCard} busy={busy} onPrevious={cardIndex>0?()=>setCardId(entries[cardIndex-1].id):undefined} onNext={cardIndex<entries.length-1?()=>setCardId(entries[cardIndex+1].id):undefined} onClose={()=>setCardId(null)} onBookmark={()=>onBookmark(selectedCard)} onEdit={()=>{setCardId(null);onEdit(selectedCard);}}/>}{storageError&&<p className="form-error" role="alert">{storageError}</p>}</section>;
 }
