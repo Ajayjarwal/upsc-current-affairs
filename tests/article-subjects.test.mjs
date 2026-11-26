@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { articleSchema, blankArticle, SUBJECTS } from '../app/model.ts';
+import { articleSchema, blankArticle, SUBJECTS, formatNewsDate } from '../app/model.ts';
 
 const sample = () => ({...blankArticle(), title:'Research and economic development'});
 
@@ -57,4 +57,13 @@ test('selected subjects are alphabetised on save and export without mutating the
   assert.deepEqual(parsed.subjects,['Agriculture','Polity & Governance','Society & Social Justice']);
   assert.deepEqual(subjects,['Society & Social Justice','Agriculture','Polity & Governance']);
   assert.deepEqual(articleSchema.parse(JSON.parse(JSON.stringify(parsed))).subjects,parsed.subjects);
+});
+
+test('month-only dates retain their precision while invalid dates are rejected', () => {
+  assert.equal(articleSchema.parse({...sample(),newsDate:'2026-08'}).newsDate,'2026-08');
+  assert.equal(formatNewsDate('2026-08'),'August 2026');
+  assert.match(formatNewsDate('2026-08-15',true),/15 August 2026/);
+  for(const newsDate of ['2026-00','2026-13','2026-8','2026-02-29','2026-08-00']){
+    assert.equal(articleSchema.safeParse({...sample(),newsDate}).success,false,newsDate);
+  }
 });

@@ -2,7 +2,25 @@ import { z } from 'zod';
 export const SUBJECTS = ['Agriculture','Economy','Environment & Ecology','Ethics','Geography','History','Internal Security','International Relations','Polity & Governance','Science & Technology','Society & Social Justice'];
 const legacySubjects = new Map([['General','Agriculture'],['Security','Internal Security'],['History & Culture','History'],['Ethics & Integrity','Ethics']]);
 export const PAPERS = ['GS I','GS II','GS III','GS IV','Prelims'];
-const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(s => { const d=new Date(s+'T00:00:00Z'); return !isNaN(d.getTime()) && d.toISOString().slice(0,10)===s; },'Use a valid news date');
+const date = z.string().refine(value => {
+  if (!/^\d{4}-(0[1-9]|1[0-2])(?:-\d{2})?$/.test(value)) return false;
+  if (isMonthOnly(value)) return true;
+  const parsed = new Date(value+'T00:00:00Z');
+  return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0,10)===value;
+}, 'Use a valid news date (YYYY-MM-DD or YYYY-MM).');
+
+export function isMonthOnly(value:string):boolean {
+  return value.length===7;
+}
+
+export function formatNewsDate(value:string, longMonth=false):string {
+  const monthOnly=isMonthOnly(value);
+  return new Date((monthOnly?value+'-01':value)+'T00:00:00Z').toLocaleDateString('en-IN',{
+    timeZone:'UTC', month:longMonth||monthOnly?'long':'short', year:'numeric',
+    ...(monthOnly?{}:{day:'numeric'}),
+  });
+}
+
 const subject = z.enum(SUBJECTS as [string,...string[]]);
 export const articleSchema = z.preprocess(value => {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return value;

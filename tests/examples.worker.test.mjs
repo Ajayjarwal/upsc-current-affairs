@@ -41,7 +41,7 @@ test('examples keep their own records and tags, enforce ownership, and support e
     assert.equal((await send('/api/examples','POST',{examples:[{...example,subjects:['Not a subject']}]})).status,400);
     assert.deepEqual((await send('/api/examples','POST',{examples:[example]})).data,{inserted:1});
     assert.deepEqual((await send('/api/examples','POST',{examples:[example]})).data,{inserted:0});
-    const news={...example,newsDate:'2026-11-17',tags:['Current affairs only']};
+    const news={...example,newsDate:'2026-08',tags:['Current affairs only']};
     assert.deepEqual((await send('/api/articles','POST',{articles:[news]})).data,{inserted:1});
     const saved=(await send('/api/examples')).data.examples[0];
     assert.equal(saved.contentHtml,example.contentHtml);
@@ -50,7 +50,9 @@ test('examples keep their own records and tags, enforce ownership, and support e
     assert.deepEqual(saved.tags,example.tags);
     assert.deepEqual(saved.gsPaper,example.gsPaper);
     assert.match(saved.newsDate,/^\d{4}-\d{2}-\d{2}$/);
-    assert.deepEqual((await send('/api/articles')).data.articles[0].tags,['Current affairs only']);
+    const savedNews=(await send('/api/articles')).data.articles[0];
+    assert.deepEqual(savedNews.tags,['Current affairs only']);
+    assert.equal(savedNews.newsDate,'2026-08');
     assert.equal((await send('/api/examples','GET',null,'other')).data.examples.length,0);
     assert.equal((await send('/api/examples','PUT',{example:{...saved,title:'Not permitted'},expectedUpdatedAt:saved.updatedAt},'other')).status,409);
     assert.equal((await send('/api/examples','PUT',{example:{...saved,title:'Updated example',tags:['Sanitation']},expectedUpdatedAt:'stale'})).status,409);

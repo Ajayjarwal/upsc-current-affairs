@@ -1,4 +1,4 @@
-import type { Article } from './model';
+import { formatNewsDate, type Article } from './model';
 import { safeHtml } from './sanitize';
 import { PDF_PALETTES, pdfGroups, type PdfCollections, type PdfSettings } from './pdf-export-model';
 
@@ -32,7 +32,7 @@ function sourceLine(name:string,url:string){
 }
 function entryHtml(entry:Article,isExample:boolean,settings:PdfSettings){
  const body=content(entry,isExample,settings.includeImages);
- const date=!isExample?'<p class="entry-date">'+escape(new Date(entry.newsDate+'T12:00:00Z').toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric',timeZone:'Asia/Kolkata'}))+'</p>':'';
+ const date=!isExample?'<p class="entry-date">'+escape(formatNewsDate(entry.newsDate,true))+'</p>':'';
  const question=isExample&&settings.includeRecallQuestions&&entry.recallQuestion?.trim()?'<p class="recall-question"><strong>Recall:</strong> '+escape(entry.recallQuestion.trim())+'</p>':'';
  const summary=!isExample&&entry.summary?'<p class="entry-summary">'+escape(entry.summary)+'</p>':'';
  return '<article class="entry '+(isExample?'entry-example':'entry-news')+'"><h3 class="entry-title">'+escape(entry.title)+'</h3>'+date+question+summary+'<div class="prose">'+body.html+'</div>'+sourceLine(body.source,entry.sourceUrl)+'</article>';

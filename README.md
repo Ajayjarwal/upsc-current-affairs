@@ -65,6 +65,8 @@ this version does not include direct AI calls or an agent write integration.
 
 `subjects` is a non-empty array, such as `["Economy", "Environment & Ecology"]`.
 Older files with a single `subject` string remain compatible.
+Use `YYYY-MM-DD` for an exact `newsDate` or `YYYY-MM` for a magazine issue
+known only by month (for example, `2026-08`).
 
 ## Article images
 
